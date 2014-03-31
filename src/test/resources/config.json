@@ -1,0 +1,17 @@
+{
+  "file_type_csv": { "delimiter": "," , "n_columns_datafile": 3, "ignore_first_line": true }
+
+  "key": {"value": { "from" : { "column_position":3}, "type": "String"}},
+
+  "set": {"value" : { "from": { "column_position":1 }, "type": "string"}},
+
+  
+  "binlist": [  
+
+
+    {"name": "loc",
+     "value": {"from" : {"column_position": 2}, "type" : "String"}
+    }
+  ]
+
+}
