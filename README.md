@@ -1,7 +1,5 @@
 #Aerospike Loader
 Aerospike Loader is a tool to load formatted data in a file into aerospike server. This tool can load any third-party data in standard format like CSV Into aerospike server.
-
-#Source to get this utility
   
 ##How to run   
 
@@ -30,7 +28,7 @@ Aerospike Loader is a tool to load formatted data in a file into aerospike serve
   
 The filename(s) can be a series of files and directories. 
   
-#####Domentation
+#####Documentation
 
 	Check following link for how to use this utility and examples. 
 	https://aerospike.atlassian.net/wiki/display/~jyoti/Aerospike+Loder?src=contextnavchildmode
