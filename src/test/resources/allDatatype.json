@@ -1,23 +1,26 @@
 {
-  "version" : "3.0",
+  "version" : "1.0",
   "input_type" : "csv",
-  "csv_style": { "delimiter": "," , "n_columns_datafile": 5, "ignore_first_line": true}
+  "csv_style": { "delimiter": "," , "n_columns_datafile": 6, "ignore_first_line": true}
 
   
-  "key": {"column_position":5, "type": "integer"},
+  "key": {"column_name":"key", "type": "integer"},
 
-  "set": { "column_position":1 , "type": "string"},
+  "set": { "column_name":"set" , "type": "string"},
 
   
   "binlist": [  
 	{"name": "age",
-     "value": {"column_position": 2, "type" : "integer"}
+     "value": {"column_name": "age", "type" : "integer"}
     }
     {"name": "loc",
-     "value": {"column_position": 4, "type" : "String"}
+     "value": {"column_name": "loc", "type" : "String"}
+    }
+    {"name": "locblob",
+     "value": {"column_name": "locblob", "type" : "blob", "dst_type" : "blob" , "encoding":"hex"}
     }
     {"name": "dob",
-     "value": {"column_position": 3, "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
+     "value": {"column_name": "dob", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
     }
   ]
 

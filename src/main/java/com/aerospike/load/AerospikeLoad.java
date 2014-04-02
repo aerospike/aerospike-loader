@@ -111,6 +111,7 @@ public class AerospikeLoad implements Runnable {
 
 			CommandLineParser parser = new PosixParser();
 			CommandLine cl = parser.parse(options, args, false);
+			log.info("I am here");
 
 			if (args.length == 0 || cl.hasOption("u")) {
 				logUsage(options);
@@ -214,9 +215,14 @@ public class AerospikeLoad implements Runnable {
 				if (params.fileType.equals(Constants.CSV_FILE)) {
 					
 					// Version check
-					if(!(metadata = metadataConfigs.get(Constants.VERSION)).equals("3.0") ){
+					metadata = metadataConfigs.get(Constants.VERSION);
+					String[] vNumber = metadata.split("\\.");
+					int v1 = Integer.parseInt(vNumber[0]);
+					int v2 = Integer.parseInt(vNumber[1]);
+					if((v1 >= Constants.MajorV) && (v2 >= Constants.MinorV)){
+						log.debug("Config version used:" + metadata);
+					} else 
 						throw new Exception("\"" + Constants.VERSION + ":" + metadata + "\" is not Supported");
-					}
 					
 					// Set delimiter 
 					if((metadata = metadataConfigs.get(Constants.DELIMITER)) != null && metadata.length() == 1){
@@ -285,11 +291,15 @@ public class AerospikeLoad implements Runnable {
 						}
 					}
 					if(metadataColumnDefs.get(i).binValuePos < 0) {
-						throw new Exception("Information missing in config file:" + metadataColumnDefs.get(i));
+						throw new Exception("Information for bin mapping is missing in config file:" + metadataColumnDefs.get(i));
 					}
 
 					if(metadataColumnDefs.get(i).srcType == null ) {
 						throw new Exception("Source data type is not properly mentioned:" + metadataColumnDefs.get(i));
+					}
+					
+					if(metadataColumnDefs.get(i).binNameHeader.equalsIgnoreCase(Constants.SET) && params.set != null) {
+						throw new Exception("Set name is given both in config file and commandline. Provide only once.");
 					}
 				}
 
@@ -350,11 +360,25 @@ public class AerospikeLoad implements Runnable {
 							throw new Exception("Source data type is not properly mentioned:" + binColumnDefs.get(i));
 						}
 						
+						//check for valid destination type
+						if((binColumnDefs.get(i).srcType.equals(SrcColumnType.TIMESTAMP) || binColumnDefs.get(i).srcType.equals(SrcColumnType.BLOB)) && binColumnDefs.get(i).dstType == null ) {
+							throw new Exception("Destination type is not mentioned: " + binColumnDefs.get(i));
+						}
+						
 						//check for encoding
 						if(binColumnDefs.get(i).dstType != null && binColumnDefs.get(i).encoding == null ) {
 							throw new Exception("Encoding is not given for src-dst type conversion:" + binColumnDefs.get(i));
 						}
 						
+						//check for valid encoding
+						if(binColumnDefs.get(i).srcType.equals(SrcColumnType.BLOB) && !binColumnDefs.get(i).encoding.equals(Constants.HEX_ENCODING)) {
+							throw new Exception("Wrong encoding for blob data:" + binColumnDefs.get(i));
+						}
+					}
+					
+					//Check static bin name mapped to dynamic bin value
+					if((binColumnDefs.get(i).binNamePos == binColumnDefs.get(i).binValuePos) && (binColumnDefs.get(i).binNamePos != -1)) {
+						throw new Exception("Static bin name mapped to dynamic bin value:" + binColumnDefs.get(i));
 					}
 					
 					//check for missing entries in config file

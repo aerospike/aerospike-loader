@@ -8,10 +8,10 @@
 	"set": { "column_name":"set" , "type": "string"},
 
   
-	"binlist": [
+	"binlist": [  
 
-		{"name": "loc",
-		"value": {"column_name": "loc", "type" : "string"}
-		}
+    	{"name": "loc",
+     	"value": {"column_name": "loc", "type" : "blob", "dst_type" : "blob", "encoding" : "hex"}
+    	}
 	]
 }

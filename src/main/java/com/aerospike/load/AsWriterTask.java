@@ -170,7 +170,9 @@ public class AsWriterTask implements Callable<Integer> {
 			for (ColumnDefinition metadataColumn : this.metadataMapping) {
 				String metadataRawText = this.columns.get(metadataColumn.getBinValuePos());
 				if(metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.SET))
-					this.set = metadataRawText;				
+					if(this.set == null){
+						this.set = metadataRawText;
+					}
 			}
 			
 			// use set name to create key
@@ -204,9 +206,12 @@ public class AsWriterTask implements Callable<Integer> {
 						bin = new Bin(binColumn.getBinNameHeader(), binRawText);
 						break;
 					case BLOB:
-						if (binColumn.encoding.equalsIgnoreCase("hex"))
-							bin = new Bin(binColumn.getBinNameHeader(),
-									this.toByteArray(binRawText)); //TODO
+						if (binColumn.getDstType().equals(DstColumnType.BLOB)){
+							if (binColumn.encoding.equalsIgnoreCase(Constants.HEX_ENCODING))
+								bin = new Bin(binColumn.getBinNameHeader(),
+										this.toByteArray(binRawText)); //TODO
+						}
+						
 						break;
 					case LIST:
 						/*
@@ -279,18 +284,21 @@ public class AsWriterTask implements Callable<Integer> {
 						}
 						break;
 					case TIMESTAMP:
-						DateFormat format = new SimpleDateFormat(
-								binColumn.getEncoding());
-						try {
-							Date formatDate = format.parse(binRawText);
-							long miliSecondForDate = formatDate.getTime()
-									- timeZoneOffset;
-							bin = new Bin(binColumn.getBinNameHeader(),
-									miliSecondForDate / 1000);
-							log.trace("Date format:" + binRawText
-									+ " in seconds:" + miliSecondForDate / 1000);
-						} catch (java.text.ParseException e) {
-							e.printStackTrace();
+						if (binColumn.getDstType().equals(DstColumnType.INTEGER)){
+							DateFormat format = new SimpleDateFormat(binColumn.getEncoding());
+							try {
+								Date formatDate = format.parse(binRawText);
+								long miliSecondForDate = formatDate.getTime()
+										- timeZoneOffset;
+								bin = new Bin(binColumn.getBinNameHeader(),
+										miliSecondForDate / 1000);
+								log.trace("Date format:" + binRawText
+										+ " in seconds:" + miliSecondForDate / 1000);
+							} catch (java.text.ParseException e) {
+								e.printStackTrace();
+							}
+						} else if (binColumn.getDstType().equals(DstColumnType.STRING)) {
+							bin = new Bin(binColumn.getBinNameHeader(), binRawText);
 						}
 						break;
 

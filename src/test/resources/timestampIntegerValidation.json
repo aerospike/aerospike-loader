@@ -1,19 +1,17 @@
 {
-	"version" : "3.0",
-   "input_type": "csv",
-  "csv_style": { "delimiter": "," , "n_columns_datafile": 3, "ignore_first_line": true }
+	"version" : "1.0",
+	"input_type": "csv",
+	"csv_style": { "delimiter": "," , "n_columns_datafile": 3, "ignore_first_line": true }
 
-  "key": { "column_name":"key", "type": "String"},
+	"key": { "column_name":"key", "type": "String"},
 
-  "set": {"column_name":"set" },
+	"set": {"column_name":"set" },
 
   
-  "binlist": [  
+	"binlist": [
 
-
-    {"name": "dob",
-     "value": {"column_name": "dob", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
-    }
-  ]
-
+		{"name": "dob",
+		"value": {"column_name": "dob", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "string"}
+		}
+	]
 }
