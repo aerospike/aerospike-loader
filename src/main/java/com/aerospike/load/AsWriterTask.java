@@ -159,8 +159,7 @@ public class AsWriterTask implements Callable<Integer> {
 			if(columns.size() != counters.write.colTotal) {
 				if (columns.size() < counters.write.colTotal)
 				{
-					log.error("Number of column in data file is less than number of column in config file. File:Line " + Utils.getFileName(this.fileName) + ":" + lineNumber);
-					System.exit(-1);
+					log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Number of column mismatch:Columns in data file is less than number of column in config file.");
 				} else {
 					throw new ParseException(lineNumber);
 				}
@@ -374,10 +373,10 @@ public class AsWriterTask implements Callable<Integer> {
 	public Integer call() throws Exception {
 		boolean processLine = false;
 		
-		try {			
+		try {
 			processLine = processLine();
 		} catch (Exception e) {
-			log.error("Error parsing File:line - " + Utils.getFileName(fileName) + ":" + (this.lineNumber+1));
+			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Parsing Error" + e);
 			log.debug(e);
 		}
 		

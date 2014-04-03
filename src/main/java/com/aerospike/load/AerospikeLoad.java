@@ -91,6 +91,7 @@ public class AerospikeLoad implements Runnable {
 	
 	public static void main(String[] args) throws IOException{
 
+		Thread statPrinter = new Thread(new PrintStat(counters));
 		try {
 			log.info("Aerospike loader started");
 			Options options = new Options();
@@ -139,23 +140,18 @@ public class AerospikeLoad implements Runnable {
 			// Get writer thread count
 			if (cl.hasOption("wt")){
 				nWriterThreads = Integer.parseInt(cl.getOptionValue("wt"));
-				writerPool = Executors.newFixedThreadPool(nWriterThreads);
+				nWriterThreads = (nWriterThreads > 0 ? (nWriterThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS : nWriterThreads) : 1);
 				log.debug("Using writer Threads: " + nWriterThreads);
-			} else {
-				writerPool = Executors.newFixedThreadPool(nWriterThreads);
-				log.debug("Using default writer Threads: " + nWriterThreads);
 			}
-			nWriterThreads = (nWriterThreads > 0 ? nWriterThreads : 1);
+			writerPool = Executors.newFixedThreadPool(nWriterThreads);
 			
 			// Get reader thread count
 			if (cl.hasOption("rt")){
 				nReaderThreads = Integer.parseInt(cl.getOptionValue("rt"));
+				nReaderThreads = (nReaderThreads > 0 ? (nReaderThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS :nReaderThreads) : 1);
 				log.debug("Using reader Threads: " + nReaderThreads);
-			} else {
-				log.debug("Using default reader Threads: " + nReaderThreads);
 			}
-			nReaderThreads = (nReaderThreads > 0 ? nReaderThreads : 1);
-
+			
 			String columnDefinitionFileName = cl.getOptionValue("c", null);
 
 			log.debug("Column definition files/directory: " + columnDefinitionFileName);
@@ -392,7 +388,6 @@ public class AerospikeLoad implements Runnable {
 			log.debug("BinColumnDefs:" + binColumnDefs);
 			
 			// Start PrintStat thread
-			Thread statPrinter = new Thread(new PrintStat(counters));
 			statPrinter.start();
 			
 			// Reader pool size
@@ -419,10 +414,7 @@ public class AerospikeLoad implements Runnable {
 			
 			while(!writerPool.isTerminated());
 			log.info("Writer thread pool terminated");
-			
-			// Stop statistic printer thread.
-			statPrinter.interrupt();
-			
+
 			// Print final statistic of aerospike-loader.
 			log.info("Final Statistics of importer: (Succesfull Writes = " + counters.write.writeCount.get() + ", "
 					+ "Errors=" + (counters.write.writeErrors.get() + counters.write.readErrors.get() + counters.write.processingErrors.get()) 
@@ -434,6 +426,8 @@ public class AerospikeLoad implements Runnable {
 				e.printStackTrace();
 			}
 		} finally {
+			// Stop statistic printer thread.
+			statPrinter.interrupt();
 			log.info("Aerospike loader completed");
 		}
 	}
@@ -505,13 +499,13 @@ public class AerospikeLoad implements Runnable {
 			
 		} catch (IOException e) {
 			counters.write.readErrors.incrementAndGet();
-			log.error("Error processing file: " + Utils.getFileName(fileName)+":" + lineNumber);
+			log.error("Error processing file: " + Utils.getFileName(fileName)+": Line: " + lineNumber);
 			if(log.isDebugEnabled()){
 				e.printStackTrace();
 			}
 		} catch (Exception e) {
 			counters.write.readErrors.incrementAndGet();
-			log.error("Error processing file: " + Utils.getFileName(fileName)+":"+ lineNumber);
+			log.error("Error processing file: " + Utils.getFileName(fileName)+": Line: "+ lineNumber);
 			if(log.isDebugEnabled()){
 				e.printStackTrace();
 			}

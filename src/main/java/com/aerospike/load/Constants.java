@@ -33,6 +33,7 @@ public class Constants {
 	public static final String CSV_FILE				= "csv";
 	
 	public static final int BIN_NAME_LENGTH			= 14;
+	public static final int MAX_THREADS				= 128;
 	
 	public static final int READLOAD				= 10000;
 	
