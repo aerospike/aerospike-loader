@@ -111,7 +111,6 @@ public class AerospikeLoad implements Runnable {
 
 			CommandLineParser parser = new PosixParser();
 			CommandLine cl = parser.parse(options, args, false);
-			log.info("I am here");
 
 			if (args.length == 0 || cl.hasOption("u")) {
 				logUsage(options);
