@@ -45,7 +45,7 @@ enum BinType {
  */
 public class CsvFileParserTest {
 	
-	String host = "192.168.64.139";
+	String host = "127.0.0.1";
 	String port = "3000";
 	String ns = "test";
 	String set = null;
@@ -229,7 +229,7 @@ public class CsvFileParserTest {
 	}
 
 	//List type data validation
-	@Test
+	//@Test
 	public void testValidateList() throws Exception {
 		System.out.println("TestValidateList: start");
 		if(!client.isConnected()) {
@@ -260,7 +260,7 @@ public class CsvFileParserTest {
 	}
 
 	//Map type data validation
-	@Test
+	//@Test
 	public void testValidateMap() throws Exception {
 		System.out.println("TestValidateMap: start");
 		if(!client.isConnected()) {
