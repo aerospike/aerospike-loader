@@ -215,48 +215,49 @@ public class AsWriterTask implements Callable<Integer> {
 					case LIST:
 						/*
 						 * Assumptions
-						 * 1. Items are separated by a colon ':'
+						 * 1. Items are separated by a colon ','
 						 * 2. Item value will be a string
+						 * 3. List will be in double quotes
 						 * 
 						 * No support for nested maps or nested lists
 						 * 
 						 */
 						List<String> list = new ArrayList<String>();
-						String[] listValues = binRawText.split(":", -1);
+						String[] listValues = binRawText.split(Constants.LIST_DELEMITER, -1);
 						if (listValues.length > 0) {
 							for (String value : listValues) {
-								list.add(value);
+								list.add(value.trim());
 							}
-							bin = Bin
-									.asList(binColumn.getBinNameHeader(), list);
+							bin = Bin.asList(binColumn.getBinNameHeader(), list);
 						} else {
 							bin = null;
-							log.error("Error: Cannot parse to a list: "
-									+ binRawText);
+							log.error("Error: Cannot parse to a list: "	+ binRawText);
 						}
 						break;
 					case MAP:
 						/*
 						 * Asumptions:
-						 * 1. Items are separated by a colon ':'
-						 * 2. Name value pairs are separated by equals '='
+						 * 1. Items are separated by a colon ','
+						 * 2. Name value pairs are separated by equals ':'
 						 * 3. Map key is a string
 						 * 4. Map value will be a string
+						 * 5. Map will be in double quotes
 						 * 
 						 * No support for nested maps or nested lists
 						 * 
 						 */
 						Map<String, Object> map = new HashMap<String, Object>();
-						String[] mapValues = binRawText.split(":", -1);
+						String[] mapValues = binRawText.split(Constants.MAP_DELEMITER, -1);
 						if (mapValues.length > 0) {
 							for (String value : mapValues) {
-								String[] kv = value.split("=");
+								String[] kv = value.split(Constants.MAPKEY_DELEMITER);
 								if (kv.length != 2)
 									log.error("Error: Cannot parse map <k,v> using: "
 											+ kv);
 								else
-									map.put(kv[0], kv[1]);
+									map.put(kv[0].trim(), kv[1].trim());
 							}
+							log.info(map.toString());
 							bin = Bin.asMap(binColumn.getBinNameHeader(), map);
 						} else {
 							bin = null;
@@ -266,8 +267,10 @@ public class AsWriterTask implements Callable<Integer> {
 						break;
 					case JSON:
 						try {
+							log.info(binRawText);
 							if (jsonParser == null)
 								jsonParser = new JSONParser();
+
 							Object obj = jsonParser.parse(binRawText);
 							if (obj instanceof JSONArray) {
 								JSONArray jsonArray = (JSONArray) obj;

@@ -40,6 +40,7 @@ public class Counter {
 		AtomicInteger writeTimeouts = new AtomicInteger();
 		AtomicInteger writeKeyExists = new AtomicInteger();
 		
+		AtomicInteger readerProcessed = new AtomicInteger();
 		int colTotal;
 		long recordTotal;
 		AtomicLong recordProcessed = new AtomicLong();

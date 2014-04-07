@@ -16,10 +16,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +45,7 @@ enum BinType {
  */
 public class CsvFileParserTest {
 	
-	String host = "127.0.0.1";
+	String host = "192.168.64.139";
 	String port = "3000";
 	String ns = "test";
 	String set = null;
@@ -55,7 +58,7 @@ public class CsvFileParserTest {
 	String log = "aerospike-load.log";
 	AerospikeClient client;
 	
-	
+
 	 @Before
 	 public void setUp() {
 
@@ -89,7 +92,7 @@ public class CsvFileParserTest {
 		String dstType = null;
 		//set%5, range=10, seed= 20	, nrecords= 100
 		int setMod = 5, range = 100, seed = 10, nrecords = 10;
-		String filename = dataFile;		
+		String filename = dataFile;
 		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
 		
 		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/stringValidation.json", dataFile});
@@ -102,7 +105,7 @@ public class CsvFileParserTest {
 		
 		System.out.println("TestValidateString: Complete");
 	}
-	
+
 	//Integer type data validation
 	@Test
 	public void testValidateInteger() throws Exception {
@@ -119,7 +122,7 @@ public class CsvFileParserTest {
 		String dstType = null;
 		//set%5, range=10, seed= 20	, nrecords= 100
 		int setMod = 5, range = 100, seed = 10, nrecords = 10;
-		String filename = dataFile;		
+		String filename = dataFile;
 		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
 		
 		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/integerValidation.json", dataFile});
@@ -132,7 +135,7 @@ public class CsvFileParserTest {
 		
 		System.out.println("TestValidateInteger: Complete");
 	}
-	
+
 	//Utf8 string type data validation
 	@Test
 	public void testValidateStringUtf8() throws Exception {
@@ -150,7 +153,7 @@ public class CsvFileParserTest {
 		
 		//set%5, range=10, seed= 20	, nrecords= 100
 		int setMod = 5, range = 100, seed = 10, nrecords = 10;
-		String filename = dataFile;		
+		String filename = dataFile;
 		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
 		
 		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/stringUtf8Validation.json", dataFile});
@@ -163,7 +166,7 @@ public class CsvFileParserTest {
 			
 		System.out.println("TestValidateStringutf8: Complete");
 	}
-		
+
 	//timestamp type data validation
 	@Test
 	public void testValidateTimestampInteger() throws Exception {
@@ -180,7 +183,7 @@ public class CsvFileParserTest {
 		String dst_type = "integer";
 		//set%5, range=10, seed= 20	, nrecords= 100
 		int setMod = 5, range = 100, seed = 10, nrecords = 10;
-		String filename = dataFile;		
+		String filename = dataFile;
 		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
 		
 		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/timestampIntegerValidation.json", dataFile});
@@ -194,8 +197,8 @@ public class CsvFileParserTest {
 				
 		System.out.println("TestValidateTimestampInteger: Complete");
 	}
-	
-	//String type data validation
+
+	//Blob type data validation
 	@Test
 	public void testValidateBlob() throws Exception {
 		System.out.println("TestValidateBlob: start");
@@ -211,7 +214,7 @@ public class CsvFileParserTest {
 		String dstType = "blob";
 		//set%5, range=10, seed= 20	, nrecords= 100
 		int setMod = 5, range = 100, seed = 10, nrecords = 10;
-		String filename = dataFile;		
+		String filename = dataFile;
 		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
 		
 		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/blobValidation.json", dataFile});
@@ -224,7 +227,92 @@ public class CsvFileParserTest {
 			
 		System.out.println("TestValidateBlob: Complete");
 	}
-	
+
+	//List type data validation
+	@Test
+	public void testValidateList() throws Exception {
+		System.out.println("TestValidateList: start");
+		if(!client.isConnected()) {
+			System.out.println("Client is not able to connect:" + host + ":" + port);
+			return;
+		}
+
+		HashMap<String, String> binMap = new HashMap<String, String>();
+		binMap.put("key", "string");
+		binMap.put("set", "String");
+		binMap.put("listprog", "list");
+		String dstType = "list";
+
+		//set%5, range=10, seed= 20	, nrecords= 100
+		int setMod = 5, range = 100, seed = 10, nrecords = 10;
+		String filename = dataFile;
+		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
+
+		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/listValidation.json", dataFile});
+
+		boolean dataValid = validateMap(client, filename, nrecords, setMod, range, seed, binMap, dstType);
+		boolean error = getError(log);
+
+		assertTrue(dataValid);
+		assertTrue(!error);
+
+		System.out.println("TestValidateList: Complete");
+	}
+
+	//Map type data validation
+	@Test
+	public void testValidateMap() throws Exception {
+		System.out.println("TestValidateMap: start");
+		if(!client.isConnected()) {
+			System.out.println("Client is not able to connect:" + host + ":" + port);
+			return;
+		}
+		HashMap<String, String> binMap = new HashMap<String, String>();
+		binMap.put("key", "string");
+		binMap.put("set", "String");
+		binMap.put("mapprog", "map");
+		String dstType = "map";
+		//set%5, range=10, seed= 20	, nrecords= 100
+		int setMod = 5, range = 100, seed = 10, nrecords = 10;
+		String filename = dataFile;
+		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
+		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/mapValidation.json", dataFile});
+		boolean dataValid = validateMap(client, filename, nrecords, setMod, range, seed, binMap, dstType);
+		boolean error = getError(log);
+
+		assertTrue(dataValid);
+		assertTrue(!error);
+
+		System.out.println("TestValidateMap: Complete");
+	}
+
+	//JSON type data validation
+	//@Test
+	public void testValidateJSON() throws Exception {
+		System.out.println("TestValidateJSON: start");
+		if(!client.isConnected()) {
+			System.out.println("Client is not able to connect:" + host + ":" + port);
+			return;
+		}
+		HashMap<String, String> binMap = new HashMap<String, String>();
+		binMap.put("key", "string");
+		binMap.put("set", "String");
+		binMap.put("JSONprog", "JSON");
+		String dstType = "JSON";
+		//set%5, range=10, seed= 20	, nrecords= 100
+		int setMod = 5, range = 100, seed = 10, nrecords = 10;
+		String filename = dataFile;
+		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
+		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-v", "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/jsonValidation.json", dataFile});
+		boolean dataValid = validateMap(client, filename, nrecords, setMod, range, seed, binMap, dstType);
+		boolean error = getError(log);
+
+		assertTrue(dataValid);
+		assertTrue(!error);
+
+		System.out.println("TestValidateJSON: Complete");
+	}
+
 	//Multiple data type insert
 	@Test
 	public void testAllDatatype() throws Exception {
@@ -243,7 +331,7 @@ public class CsvFileParserTest {
 		binMap.put("age", "integer");
 		//set%5, range=10, seed= 20	, nrecords= 100
 		int setMod = 5, range = 100, seed = 10, nrecords = 100;
-		String filename = dataFile;		
+		String filename = dataFile;
 		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
 		
 		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/allDatatype.json", dataFile});
@@ -255,7 +343,6 @@ public class CsvFileParserTest {
 		System.out.println("TestAllDatatype: Complete");
 	}
 
-	
 	//Dynamic bin name
 	@Test
 	public void testDynamicBinName() throws Exception {
@@ -273,7 +360,7 @@ public class CsvFileParserTest {
 				
 		System.out.println("Test Dynamic BinName: Complete");
 	}
-	
+
 	//Static binName
 	@Test
 	public void testStaticBinName() throws Exception {
@@ -291,7 +378,7 @@ public class CsvFileParserTest {
 					
 		System.out.println("Test static BinName: Complete");
 	}
-	
+
 	// Helper functions
 	public void writeDataMap(String fileName, int nrecords, int setMod, int range, int seed, HashMap<String, String> binMap){
 		File file = new File(fileName);
@@ -427,6 +514,19 @@ public class CsvFileParserTest {
 		} else if (dstType != null && dstType.equalsIgnoreCase("blob")){
 			expected = convertHexToString(bin.value.toString());
 			received = new String((byte[]) received);
+		} else if (dstType != null && dstType.equalsIgnoreCase("list")){
+			received = received.toString().replace('[', '"').replace(']', '"');
+			expected = bin.value.toString();
+		} else if (dstType != null && dstType.equalsIgnoreCase("map")){
+			Map<String, Integer> map = (Map<String, Integer>) received;
+			String temp = String.format("\"%s%d=%s, %s%d=%s, %s%d=%s, %s%d=%s, %s%d=%s\"",
+					bin.name,1,map.get(bin.name+"1"),
+					bin.name,2,map.get(bin.name+"2"),
+					bin.name,3,map.get(bin.name+"3"),
+					bin.name,4,map.get(bin.name+"4"),
+					bin.name,5,map.get(bin.name+"5"));
+			received = temp;
+			expected = bin.value.toString();
 		} else{
 			expected = bin.value.toString();
 		}
@@ -438,7 +538,7 @@ public class CsvFileParserTest {
 		else {
 			System.out.println(String.format("Put/Get mismatch: Expected %s. Received %s.", expected, received));
 		}
-		
+
 		return valid;
 	}
 	
@@ -493,10 +593,25 @@ public class CsvFileParserTest {
 			value = String.format("%d", i);
 			break;
 		case JSON:
+			JSONParser jsonParser = new JSONParser();
+			// Read the json config file
+			Object obj = null;
+			try {
+				obj =  jsonParser.parse(new FileReader("src/test/resources/jsonValidation.json"));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			value = String.format( "\"%s\"",obj.toString().replace(':', '='));
 			break;
 		case LIST:
+			value = String.format("\"%s%d, %s%d, %s%d, %s%d, %s%d\"", binName,1,binName,2,binName,3,binName,4,binName,5);
 			break;
 		case MAP:
+			value = String.format("\"%s%d=%d, %s%d=%d, %s%d=%d, %s%d=%d, %s%d=%d\"", binName,1,1,binName,2,2,binName,3,3,binName,4,4,binName,5,5);
 			break;
 		case STRING:
 			if(binName.equalsIgnoreCase("utf8")){

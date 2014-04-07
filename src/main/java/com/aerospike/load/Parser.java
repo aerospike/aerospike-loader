@@ -213,13 +213,11 @@ public class Parser {
 						//TODO for json format
 					}
 				} else {
-					
 					binNameHeader = jobjName;
 					binValueHeader = columnName;
 				}
 			} else {
 				binNameHeader = jobjName;
-				
 				binValuePos = (Integer.parseInt(jobj.get(Constants.COLUMN_POSITION).toString())-1);
 			}
 			

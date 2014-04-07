@@ -44,8 +44,10 @@ public class PrintStat implements Runnable{
 	public void run() {
 		
 		int tps = 0;
+		int rtps = 0;
 		int nWrites = 0;
 		int nErrors = 0;
+		int nReader = 0;
 		int progress = 0;
 		while(!Thread.currentThread().isInterrupted()){
 			
@@ -75,6 +77,10 @@ public class PrintStat implements Runnable{
 					counters.write.readErrors.get() +
 					counters.write.processingErrors.get());
 			
+			rtps = counters.write.readerProcessed.get() - nReader;
+			nReader = counters.write.readerProcessed.get();
+
+			log.debug(date.toString() + ": Read/process tps:" + rtps);
 			// Print stats
 			log.info(date.toString() + " load(Write count=" + counters.write.writeCount.get() + 
 					" tps=" + tps +

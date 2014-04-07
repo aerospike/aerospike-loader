@@ -80,12 +80,12 @@ public class AerospikeLoad implements Runnable {
 	private static ExecutorService			writerPool;
 	private static int						nWriterThreads;
 	private static int						nReaderThreads;
+	private static int						rwThrottle;
 	private static final int				scaleFactor = 5;
 	private static List<ColumnDefinition>	metadataColumnDefs;
 	private static List<ColumnDefinition>	binColumnDefs;
 	private static HashMap<String, String>	metadataConfigs;
 	private static Parameters 				params;
-
 	private static Counter 	counters = new Counter();
 	private static Logger	log = Logger.getLogger(AerospikeLoad.class);
 	
@@ -102,6 +102,7 @@ public class AerospikeLoad implements Runnable {
 			options.addOption("c", "config", true, "Column definition file name");
 			options.addOption("wt", "write-threads", true, "Number of writer threads (default: Number of cores * 5)");
 			options.addOption("rt", "read-threads", true, "Number of reader threads (default: Number of cores * 1)");
+			options.addOption("l", "rw-throttle", true, "Throttling of reader to writer(default: 10k) ");
 			options.addOption("tt", "transaction-timeout", true, "write transaction timeout in miliseconds(default: No timeout)");
 			options.addOption("et", "expiration-time", true, "Expiration time of records in seconds (default: never expire)");
 			options.addOption("T", "timezone", true, "Timezone of source where data dump is taken (default: local timezone)");
@@ -118,6 +119,11 @@ public class AerospikeLoad implements Runnable {
 				return;
 			}
 
+			if (cl.hasOption("l")){
+				rwThrottle = Integer.parseInt(cl.getOptionValue("l"));
+			} else {
+				rwThrottle = Constants.READLOAD;
+			}
 			// Get all command line options
 			params = Utils.parseParameters(cl);
 
@@ -131,7 +137,7 @@ public class AerospikeLoad implements Runnable {
 			if (cl.hasOption("v")) {
 				log.setLevel(Level.DEBUG);				
 			}
-			
+
 			// Get available processors to calculate default number of threads
 			int cpus = Runtime.getRuntime().availableProcessors();
 			nWriterThreads = cpus * scaleFactor;
@@ -391,7 +397,7 @@ public class AerospikeLoad implements Runnable {
 			statPrinter.start();
 			
 			// Reader pool size
-			ExecutorService readerPool = Executors.newFixedThreadPool(nReaderThreads);
+			ExecutorService readerPool = Executors.newFixedThreadPool(nReaderThreads > allFileNames.size() ? allFileNames.size() : nReaderThreads);
 			log.info("Reader pool size : " + nReaderThreads);
 			
 			// Submit all tasks to writer threadpool.
@@ -480,11 +486,13 @@ public class AerospikeLoad implements Runnable {
 					log.trace("Read line " + lineNumber + " from file " + Utils.getFileName(fileName));
 					
 					// Throttle the read to write ratio
-					while((counters.write.readCount.get() - (counters.write.writeCount.get() + counters.write.writeErrors.get())) > Constants.READLOAD) ;
-
+					while((counters.write.readCount.get() - (counters.write.writeCount.get() + counters.write.writeErrors.get())) > rwThrottle) {
+						Thread.sleep(20);
+					}
 					if(params.fileType.equalsIgnoreCase(Constants.CSV_FILE)){
 						//add 2 to handle different file size in different platform.
 						task = new AsWriterTask(fileName, lineNumber, (line.length() + 1), Parser.getCSVRawColumns(line, params.delimiter), metadataColumnDefs, binColumnDefs, this.client, params, counters);
+						counters.write.readerProcessed.incrementAndGet();
 					} else {
 						log.error("File format not supported");
 					}
