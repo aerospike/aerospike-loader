@@ -228,7 +228,9 @@ public class Parser {
 			
 			// Default set type is string
 			if (Constants.SET.equalsIgnoreCase(jobjName)) {
-				srcType = "string";
+				srcType = (String) jobj.get(Constants.TYPE);
+				if (srcType == null)
+					srcType = "string";
 			}
 			
 			//key and set value are always dynamic

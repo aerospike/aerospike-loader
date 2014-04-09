@@ -27,7 +27,7 @@ package com.aerospike.load;
  *
  */
 enum SrcColumnType {
-	INTEGER, STRING, BLOB, LIST, MAP, JSON, TIMESTAMP;
+	INTEGER, STRING, BLOB, LIST, MAP, JSON, TIMESTAMP, FLOAT;
 }
 /**
  * List of datatypes supported by Aerospike
@@ -123,8 +123,11 @@ public class ColumnDefinition {
 			this.srcType = SrcColumnType.JSON;
 		} else if ("timestamp".equalsIgnoreCase(type)){
 			this.srcType = SrcColumnType.TIMESTAMP;
+		} else if ("float".equalsIgnoreCase(type)){
+			this.srcType = SrcColumnType.FLOAT;
 		}
 	}
+
 	public void setDstType(String type) {
 		if ("string".equalsIgnoreCase(type)){
 			this.dstType = DstColumnType.STRING;

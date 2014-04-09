@@ -298,7 +298,11 @@ public class AerospikeLoad implements Runnable {
 					if(metadataColumnDefs.get(i).srcType == null ) {
 						throw new Exception("Source data type is not properly mentioned:" + metadataColumnDefs.get(i));
 					}
-					
+
+					if(metadataColumnDefs.get(i).binNameHeader == Constants.SET && !metadataColumnDefs.get(i).srcType.equals(SrcColumnType.STRING)){
+						throw new Exception("Set name should be string type:" + metadataColumnDefs.get(i));
+					}
+
 					if(metadataColumnDefs.get(i).binNameHeader.equalsIgnoreCase(Constants.SET) && params.set != null) {
 						throw new Exception("Set name is given both in config file and commandline. Provide only once.");
 					}

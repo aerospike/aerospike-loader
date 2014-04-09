@@ -22,6 +22,7 @@
 
 package com.aerospike.load;
 
+import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ public class AsWriterTask implements Callable<Integer> {
 	private int abortErrorCount;
 	
 	private Key key;
-	private Bin[] bins;
+	private List<Bin> bins;
 	private List<ColumnDefinition> metadataMapping = new ArrayList<ColumnDefinition>();
 	private List<ColumnDefinition> binMapping = new ArrayList<ColumnDefinition>();
 	private List<String> columns;
@@ -107,13 +108,17 @@ public class AsWriterTask implements Callable<Integer> {
 		long errorTotal = 0;
 		if (this.client != null){
 			try {
-				this.client.put(this.writePolicy, this.key, this.bins);
-				counters.write.recordProcessed.addAndGet(this.lineSize);
-				counters.write.writeCount.getAndIncrement();	
-				log.trace("Wrote line " + lineNumber + " Key: " + this.key.userKey + " to Aerospike");
-				value = 1;
+				if(!bins.isEmpty()) {
+					this.client.put(this.writePolicy, this.key, this.bins.toArray(new Bin[bins.size()]));
+					counters.write.recordProcessed.addAndGet(this.lineSize);
+					counters.write.writeCount.getAndIncrement();
+					log.trace("Wrote line " + lineNumber + " Key: " + this.key.userKey + " to Aerospike");
+					value = 1;
+				} else {
+					log.trace("No bins to insert");
+				}
 			} catch (AerospikeException ae) {
-				log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Write Error:" + ae.getResultCode());
+				log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + "Aerospike Write Error:" + ae.getResultCode());
 				if(log.isDebugEnabled()){
 					ae.printStackTrace();
 				}
@@ -134,7 +139,7 @@ public class AsWriterTask implements Callable<Integer> {
 					System.exit(-1);
 				}
 			} catch (Exception e) {
-				log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Write Error:" + e.getMessage());
+				log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Write Error:" + e);
 				if(log.isDebugEnabled()){
 					e.printStackTrace();
 				}
@@ -148,11 +153,9 @@ public class AsWriterTask implements Callable<Integer> {
 		} 
 		return value;
 	}
-
 	private boolean processLine() {
 		log.debug("processing  File:line " + Utils.getFileName(fileName) + this.lineNumber );
-		bins = new Bin[this.binMapping.size()];
-		int binIndex = 0;
+		bins = new ArrayList<Bin>();
 		boolean lineProcessed = false;
 		long errorTotal = 0;
 		try {
@@ -196,10 +199,32 @@ public class AsWriterTask implements Callable<Integer> {
 
 				if (!binColumn.staticValue) {
 					String binRawText = this.columns.get(binColumn.getBinValuePos());
+
+					if(binRawText.equals("")) continue;
+
 					switch (binColumn.getSrcType()) {
 					case INTEGER:
-						Integer integer = Integer.parseInt(binRawText);
-						bin = new Bin(binColumn.getBinNameHeader(), integer);
+						Integer integer;
+						try {
+							integer = Integer.parseInt(binRawText);
+							bin = new Bin(binColumn.getBinNameHeader(), integer);
+						} catch (Exception pi) {
+							log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Integer Parse Error:" + pi);
+						}
+
+						break;
+					case FLOAT:
+
+						/**
+						 * Floating type data can be stored as 8 byte byte array.
+ 						 */
+						try {
+							float binfloat = Float.parseFloat(binRawText);
+							byte [] byteFloat = ByteBuffer.allocate(8).putFloat(binfloat).array();
+							bin = new Bin(binColumn.getBinNameHeader(), byteFloat);
+						} catch (Exception e) {
+							log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Floating number Parse Error:" + e);
+						}
 						break;
 					case STRING:
 						bin = new Bin(binColumn.getBinNameHeader(), binRawText);
@@ -257,7 +282,7 @@ public class AsWriterTask implements Callable<Integer> {
 								else
 									map.put(kv[0].trim(), kv[1].trim());
 							}
-							log.info(map.toString());
+							log.debug(map.toString());
 							bin = Bin.asMap(binColumn.getBinNameHeader(), map);
 						} else {
 							bin = null;
@@ -267,7 +292,7 @@ public class AsWriterTask implements Callable<Integer> {
 						break;
 					case JSON:
 						try {
-							log.info(binRawText);
+							log.debug(binRawText);
 							if (jsonParser == null)
 								jsonParser = new JSONParser();
 
@@ -310,11 +335,13 @@ public class AsWriterTask implements Callable<Integer> {
 				} else {
 					bin = new Bin(binColumn.getBinNameHeader(), binColumn.getBinValueHeader());
 				}
-				bins[binIndex] = bin;
-				binIndex++;
+
+				if(bin != null){
+					bins.add(bin);
 				}
+			}
 			lineProcessed = true;
-			log.trace("Formed key and bins for line " + lineNumber + " Key: " + this.key.userKey);
+			log.trace("Formed key and bins for line " + lineNumber + " Key: " + this.key.userKey + " Bins:" + this.bins.toString());
 		} catch (AerospikeException ae) {
 			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Aerospike Bin processing Error:" + ae.getResultCode());
 			if(log.isDebugEnabled()){
@@ -349,6 +376,7 @@ public class AsWriterTask implements Callable<Integer> {
 				System.exit(-1);
 			}
 		}
+
 		return lineProcessed;
 	}
 
@@ -368,7 +396,7 @@ public class AsWriterTask implements Callable<Integer> {
 	                             + Character.digit(s.charAt(i+1), 16));
 			}
 		} catch (Exception e) {
-			log.info("blob exception:" + e.toString());
+			log.error("blob exception:" + e);
 		}
 		return data;
 	}
