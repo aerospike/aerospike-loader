@@ -17,7 +17,7 @@
 <a name="Dependencies"></a>
 ##Dependencies
 Following dependencies are used:
-* Aerospike Java client 3.0.22
+* Aerospike Java client 3.0.22 or greater
 * Apache commons cli 1.2
 * Log4j 1.2.14
 * Junit 4.4
@@ -27,7 +27,7 @@ Following dependencies are used:
 ## Installation
 * Source code is available on git-hub:
 
-         $ git clone git@github.com:citrusleaf/aerospike-loader.git
+        $ git clone git@github.com:citrusleaf/aerospike-loader.git
 
 * Then build the utility by running following:
 
@@ -36,20 +36,20 @@ Following dependencies are used:
 
 <a name="Usage"></a>
 ## Usage
-Use asload script to run this tool using options and data file.  
+Use run_loader script to run this tool using options and data file.  
     
-        $ asload <options> <data file names>
-* "data file names" can be list of space separated files, or a directory name containing data files. See "Data Files" section later.
+        $ run_loader <options> <data file names>
+"data file names" can be list of space separated files, or a directory name containing data files. See "Data Files" section later.
 Different options are explained below:
 
 <a name="Options"></a>
 ### Options:
- * The command options for aerospike-loader are:
+The command options for aerospike-loader are:
 
-		-c,--config <arg>                Column definition file name
-		-ec,--abort-error-count <arg>    Error count to abort (default: 0)
-		-et,--expiration-time <arg>      Expiration time of records in seconds(default: never expire)
-		-h,--host <arg>                  Server hostname (default: localhost)
+	-c,--config <arg>                Column definition file name
+	-ec,--abort-error-count <arg>    Error count to abort (default: 0)
+	-et,--expiration-time <arg>      Expiration time of records in seconds(default: never expire)
+	-h,--host <arg>                  Server hostname (default: localhost)
     	-n,--namespace <arg>             Namespace (default: test)
     	-p,--port <arg>                  Server port (default: 3000)
     	-rt,--read-threads <arg>         Number of reader threads (default: Number of cores * 1)
@@ -59,8 +59,8 @@ Different options are explained below:
     	-u,--usage                       Print usage.
     	-v,--verbose                     Logging all
     	-wa,--write-action <arg>         Write action if key already exists (default: update)
-		-wt,--write-threads <arg>        Number of writer threads (default: Number of cores * 5)
+	-wt,--write-threads <arg>        Number of writer threads (default: Number of cores * 5)
 	
 ##Example
 
-	java -jar aerospike-load-<version>.jar -h 127.0.0.1 -p 3000 -n test -s demo -c src/test/resources/columns.json src/test/resources/data.csv
+	./run_loader -h 127.0.0.1 -p 3000 -n test -s demo -c src/test/resources/columns.json src/test/resources/data.csv
