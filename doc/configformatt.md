@@ -1,7 +1,55 @@
 # Configuration file
-  > The Aerospike-loader configuration file specifies the schema mapping of the source data set to the Aerospike database, as well as specifies attributes to help parse the source data files.
+>The Aerospike-loader configuration file specifies the schema mapping of the source data set to the Aerospike database, as well as specifies attributes to help parse the source data files.
 Format of this file is in JSON.
 
+- [Sample Config](#config)
+- [Keywords Supported](#keyword)
+  - [CSV_STYLE attributes](#csv_style)
+  - [Key/set attribute](#key/set)
+  - [Binlist attributes](#binlist)
+
+<a name="config"></a>
+## Sample configuration file:
+``` c
+{
+  "version" : "3.0",
+  "input_type": "csv",
+  "csv_style": {
+    "delimiter": ",",
+    "n_columns_datafile": 4,
+    "ignore_first_line": true
+  },
+  "key": {
+    "column_position": 2,
+    "type": "string"
+  },
+  "set": {
+    "column_position": 4
+  },
+  "binlist": [
+    {
+      "name": "bin1",
+      "value": {
+        "column_position": 3,
+        "type": "timestamp",
+        "dst_type": "integer",
+        "encoding" : "MM/dd/yyyy"
+      }
+    },
+    {
+      "name": "bin2",
+      "value": {
+        "column_name": "last_visited",
+        "type": "blob",
+        "encoding" : "hex"
+      }
+    }
+  ]
+}
+
+```
+
+<a name="keyword"></a>
 ## Keywords Supported in Config file:
 
 | Keywords   | Description                                                                                                  | Required/ Optional                     | Value                    | Attributes                                                                |
@@ -13,6 +61,7 @@ Format of this file is in JSON.
 | SET        | Set name mapping from data file. Set name can be provided from command line. Set name is always string type. | Optional                               | list of attribute values | choice( column_position, column_name)                                     |
 | BINLIST    |  List of bin mapping  from data file.                                                                        | Required                               | Array of lists           | No direct attibutes. Each list in array has two attributes: NAME, VALUE . |
 
+<a name="csv_style"></a>
 ### CSV_STYLE Attributes:
 
 | Keywords          	| Description                                                                                  	| Required/ Optional        	| Value                                                                        	|
@@ -21,13 +70,14 @@ Format of this file is in JSON.
 | COLUMNS           	| Number of columns in data file.                                                              	| Required                  	| Integer                                                                      	|
 | IGNORE_FIRST_LINE 	| This attribute is used to skip first line of data file where header information is present.  	| Required                  	| "true","false".                                                              	|
 
+<a name="key/set"></a>
 ### Key/Set Attributes:
 
 | Keywords                     | Description                                                                | Required/ Optional                             | Value           |
 |------------------------------|----------------------------------------------------------------------------|------------------------------------------------|-----------------|
 | COLUMN POSITION/ COLUMN_NAME | Column position number in data file or column name in header of data file. | Reaquire one of COLUMN_POSITION / COLUMN NAME. | integer/ string |
 | TYPE                         | Type of key/set. Set name data should be string.                           | Require                                        | string          |
-
+<a name="binlist"></a>
 ### Binlist Attributes:
 BINLIST contains array of lists. So there is no direct attributes. Each list in binlist has two attributes one is NAME(name mapping for each bin) and other one is VALUE(value mapping for each bin). In following table some subattributes for NAME/ VALUE described. NAME attribute doesn't have dst_type and encoding attribute, and type is string. NAME/VALUE can have static/fixed values or we can pick name/value from data file. Leanth of each bin name should be less than or equal to 14.
 
