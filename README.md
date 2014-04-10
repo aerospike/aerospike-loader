@@ -6,7 +6,8 @@
 - [Installation](#Installation)
 - [Usage](#Usage)
     - [Options](#Options)
-    - [Config file](doc/configformatt.md) 
+    - [Config file](doc/configformatt.md)
+    - [Data file] (doc/datafile.md)
 - [Documentation](https://aerospike.atlassian.net/wiki/display/~jyoti/Documentation+for+Aerospike+Loader)
 
 
