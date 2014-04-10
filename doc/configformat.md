@@ -12,7 +12,7 @@ Format of this file is in JSON.
 ## Sample configuration file:
 ``` c
 {
-  "version" : "3.0",
+  "version" : "1.0",
   "input_type": "csv",
   "csv_style": {
     "delimiter": ",",
