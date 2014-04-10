@@ -5,7 +5,8 @@
 - [Dependencies](#Dependencies)
 - [Installation](#Installation)
 - [Usage](#Usage)
-    * [Options](#Options)
+    - [Options](#Options)
+    - [Config file](doc/configformatt.md) 
 - [Documentation](https://aerospike.atlassian.net/wiki/display/~jyoti/Documentation+for+Aerospike+Loader)
 
 
