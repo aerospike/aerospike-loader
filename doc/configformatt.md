@@ -13,3 +13,10 @@ Format of this file is in JSON.
 | SET        | Set name mapping from data file. Set name can be provided from command line. Set name is always string type. | Optional                               | list of attribute values | choice( column_position, column_name)                                     |
 | BINLIST    |  List of bin mapping  from data file.                                                                        | Required                               | Array of lists           | No direct attibutes. Each list in array has two attributes: NAME, VALUE . |
 
+## CSV_STYLE Attributes:
+
+| Keywords          	| Description                                                                                  	| Required/ Optional        	| Value                                                                        	|
+|-------------------	|----------------------------------------------------------------------------------------------	|---------------------------	|------------------------------------------------------------------------------	|
+| DELIMITER         	| delimiter is used to separate data in each row of data file.                                 	| Optional (default is ',') 	| any single character. Data part should not contain this delimiter character. 	|
+| COLUMNS           	| Number of columns in data file.                                                              	| Required                  	| Integer                                                                      	|
+| IGNORE_FIRST_LINE 	| This attribute is used to skip first line of data file where header information is present.  	| Required                  	| "true","false".                                                              	|
