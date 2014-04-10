@@ -30,3 +30,10 @@ Format of this file is in JSON.
 | TYPE            	| Type of key/set. Set name data should be string. 	| Require                                       	|   string      	|
 
 ### Binlist Attributes:
+
+| Keywords                     | Description                                                                                                                                                                                    | Required/ Optional                                            | Value            |
+|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|------------------|
+| COLUMN POSITION/ COLUMN_NAME | Column name in header of data file or column position.                                                                                                                                         | Require any one of COLUMN POSITION/ COLUMN_NAME               | integer / string |
+| TYPE                         | Data type of source data. Supported data types are: integer, float, string, blob, timestamp.                                                                                                   | Require                                                       | string           |
+| DST_TYPE                     | Source type data to aerospike type conversion. Supported data types are: integer, string, blob. Timestamp can be stored as integer/string, float is stored as 8 byte encoded byte array(blob). | Require if source type to destination type conversion needed. | string           |
+| ENCODING                     | Encoding formatt for data conversion from source to destination type. Blob type data  should be hex encoded. Timestamp type data can be encoded as "MM/DD/YYYY" if dst_type is integer.        | Require if DST_TYPE is given                                  | string           |
