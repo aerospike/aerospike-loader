@@ -23,11 +23,10 @@ Format of this file is in JSON.
 
 ### Key/Set Attributes:
 
-| Keywords        	| Description                                      	| Required/ Optional                            	| Value   	|
-|-----------------	|--------------------------------------------------	|-----------------------------------------------	|---------	|
-| COLUMN_POSITION 	| Column position number in data file.             	| Required if COLUMN_NAME is not specified.     	| integer 	|
-| COLUMN_NAME     	| Column name in header of data file.              	| Required if COLUMN_POSITION is not specified. 	| string  	|
-| TYPE            	| Type of key/set. Set name data should be string. 	| Require                                       	|   string      	|
+| Keywords                     | Description                                                                | Required/ Optional                             | Value           |
+|------------------------------|----------------------------------------------------------------------------|------------------------------------------------|-----------------|
+| COLUMN POSITION/ COLUMN_NAME | Column position number in data file or column name in header of data file. | Reaquire one of COLUMN_POSITION / COLUMN NAME. | integer/ string |
+| TYPE                         | Type of key/set. Set name data should be string.                           | Require                                        | string          |
 
 ### Binlist Attributes:
 
