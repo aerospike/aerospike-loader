@@ -260,7 +260,9 @@ public class AerospikeLoad implements Runnable {
 						binName = Parser.getCSVRawColumns(line, params.delimiter);
 						br.close();	
 						if(binName.size() != counters.write.colTotal) {
-							throw new Exception("Number of column in config file and datafile are mismatch");
+							throw new Exception("Number of column in config file and datafile are mismatch."
+								+ " Datafile: " + Utils.getFileName(allFileNames.get(0))
+								+ " Configfile: " + Utils.getFileName(columnDefinitionFileName));
 						}
 					}										
 				}
