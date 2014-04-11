@@ -19,4 +19,5 @@ Above one is a sample of a data file. First row is the header information of eac
 - Blob    : Binary fields which is hex ecoded is stored as blobs. E.g. hex encoded "abc" as 616263.
 - Timestamp: Timestamp type data stored as string or integer. E.g. "1-1-1970" as string stored as "1-1-1970" but as integer stored as -19800 seconds(negative because its calculated reference to UTC timezone).
 
-> Timestamp type data should have some format, and always be in double quotes. For best practices in timestamp formatting refer [SimpleDateFormat](http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html)
+
+> **Note**: Timestamp type data should have some format, and always be in double quotes. For best practices in timestamp formatting refer [SimpleDateFormat](http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html).
