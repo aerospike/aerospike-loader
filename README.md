@@ -44,4 +44,22 @@ Use run_loader script to run this tool using options and data file.
 "data file names" can be list of space separated files, or a directory name containing data files. See "Data Files" section later.
 Different options are explained below:
 
+``` java
+-c,--config <arg>                Column definition file name
+-ec,--abort-error-count <arg>    Error count to abort (default: 0)
+-et,--expiration-time <arg>      Expiration time of records in seconds (default: never expire)
+-h,--host <arg>                  Server hostname (default: localhost)
+-l,--rw-throttle <arg>           Throttling of reader to writer(default: 10k)
+-n,--namespace <arg>             Namespace (default: test)
+-p,--port <arg>                  Server port (default: 3000)
+-rt,--read-threads <arg>         Number of reader threads (default: Number of cores * 1)
+-s,--set <arg>                   Set name. (default: null)
+-T,--timezone <arg>              Timezone of source where data dump is taken (default: local timezone)
+-tt,--transaction-timeout <arg>  write transaction timeout in miliseconds(default: No timeout)
+-u,--usage                       Print usage.
+-v,--verbose                     Logging all
+-wa,--write-action <arg>         Write action if key already exists (default: update)
+-wt,--write-threads <arg>        Number of writer threads (default: Number of cores * 5)
+
+```
 
