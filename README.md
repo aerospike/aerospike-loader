@@ -49,7 +49,6 @@ Different options are explained below:
 -ec,--abort-error-count <arg>    Error count to abort (default: 0)
 -et,--expiration-time <arg>      Expiration time of records in seconds (default: never expire)
 -h,--host <arg>                  Server hostname (default: localhost)
--l,--rw-throttle <arg>           Throttling of reader to writer(default: 10k)
 -n,--namespace <arg>             Namespace (default: test)
 -p,--port <arg>                  Server port (default: 3000)
 -rt,--read-threads <arg>         Number of reader threads (default: Number of cores * 1)
