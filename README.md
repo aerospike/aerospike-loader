@@ -65,7 +65,3 @@ The command options for aerospike-loader are:
 | -v                        | Verbose mode.  If this option is specified, verbose mode is enabled and additional information is displayed on the console.                                                                                                                                                                                                                                                                                                                                                                                        | DISABLED            |
 | -u                   | Display command usage.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |                     |
 
-	
-##Example
-
-	./run_loader -h 127.0.0.1 -p 3000 -n test -s demo -c src/test/resources/columns.json src/test/resources/data.csv
