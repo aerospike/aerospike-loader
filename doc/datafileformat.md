@@ -16,7 +16,7 @@ Above one is a sample of a data file. First row is the header information of eac
 - Integer : Integer type data including numbers. E.g. 123456
 - Float   : Floating type data is stored in aerospike as 8 byte byte array. E.g. 0.345
 - String  : String type data. E.g. "Aerospike"
-- Blob    : Binary fields  stored as blobs which is hex encoded. E.g. hex encoded "abc" as 616263.
+- Blob    : Binary fields which is hex ecoded is stored as blobs. E.g. hex encoded "abc" as 616263.
 - Timestamp: Timestamp type data stored as string or integer. E.g. "1-1-1970" as string stored as "1-1-1970" but as integer stored as -19800 seconds(negative because its calculated reference to UTC timezone).
 
 > Timestamp type data should have some format, and always be in double quotes. For best practices in timestamp formatting refer [SimpleDateFormat](http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html)
