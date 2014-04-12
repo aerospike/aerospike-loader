@@ -21,7 +21,7 @@ USA, userid3, 08/16/2011, Tweeter
 ## Config file example
 Configuration file is used to map data in datafile to store in aerospike server. Below are quick guide lines to write config file.
 
-#####1. Sample config file for above data file:
+**1. Sample config file for above data file:**
 
 ```json
 {
@@ -57,7 +57,7 @@ Configuration file is used to map data in datafile to store in aerospike server.
   ]
 }
 ```
-####2. We can give static values for a record. 
+**2. We can give static values for a record.**
 E.g. we can add extra information for a record. To do that add following to binlist.
 
 ```json
@@ -66,7 +66,7 @@ E.g. we can add extra information for a record. To do that add following to binl
       "value": "xyz database"
     }
 ```
-####3. To use header information from data file use column_name. It will use column name for mapping.
+**3. To use header information from data file use column_name. It will use column name for mapping.**
 
 ```json
 	"value": {
@@ -74,10 +74,10 @@ E.g. we can add extra information for a record. To do that add following to binl
             "type": "string"
       	}
 ```
-####4. To load timestamp type data we have to specify dst_type(native aerospike type), and encoding formatt.
+**4. To load timestamp type data we have to specify dst_type(native aerospike type), and encoding formatt.**
 >  **Note: Timestamp can be stored as integer of seconds from UTC
 
-#####Timestamp-Integer
+**Timestamp-Integer**
 
 ```json
 	"value": {
@@ -88,7 +88,7 @@ E.g. we can add extra information for a record. To do that add following to binl
         }
 ```
 
-#####Timestamp-String
+**Timestamp-String**
 
 ```json
 	"value": {
@@ -99,7 +99,7 @@ E.g. we can add extra information for a record. To do that add following to binl
         }
 ```
 
-####5. To load blob type data we have to specify dst_type(native aerospike type), and encoding formatt.
+**5. To load blob type data we have to specify dst_type(native aerospike type), and encoding formatt.**
 
 ```json
 	"value": {
@@ -110,13 +110,37 @@ E.g. we can add extra information for a record. To do that add following to binl
         }
 ```
 
-
 <a name="option usage"></a>
 ## Option usage example
-Default vaues are:
-	host:localhost
-	port:3000
-	
 
-Running aerospike loader needs following two files. One is data file which contains data dump in csv format, other one is 
-Various examples to understand better way of using aerospike loader.
+** With all default values run aerospike loader as follows:
+
+```java
+
+/run_loader -c ~/pathto/config.json ~/pathto/data.csv
+
+```
+
+** Use list of data files for loading
+
+```java
+
+/run_loader -c ~/pathto/config.json data1.csv data2.csv data3.csv
+
+```
+
+** With all default values run, aerospike loader as follows:
+```java
+
+/run_loader -c ~/pathto/config.json data.csv
+
+```
+** Specify timezone of the location from where data dump is taken. Its optional, if source and destination are same.
+
+```java
+
+/run_loader -c ~/pathto/configdata.csv -T PST
+
+```
+
+
