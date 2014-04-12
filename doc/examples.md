@@ -76,8 +76,8 @@ E.g. we can add extra information for a record. To do that add following to binl
             "type": "string"
       	}
 ```
-**4. To load timestamp type data we have to specify dst_type(native aerospike type), and encoding formatt.**
->  **Note: Timestamp can be stored as integer of seconds from UTC
+**4. To load timestamp type data we have to specify dst_type(native aerospike type), and encoding format.**
+>  **Note: Timestamp can be stored as integer of seconds.**
 
 **Timestamp-Integer**
 
@@ -101,7 +101,7 @@ E.g. we can add extra information for a record. To do that add following to binl
         }
 ```
 
-**5. To load blob type data we have to specify dst_type(native aerospike type), and encoding formatt.**
+**5. To load blob type data we have to specify dst_type(native aerospike type), and encoding format.**
 
 ```json
 	"value": {
@@ -116,35 +116,42 @@ E.g. we can add extra information for a record. To do that add following to binl
 ## Option usage example
 
 
-   ** 1. With all default values, run aerospike loader as follows: **
+* With all default values, run aerospike loader as follows:
 
 ```java
 
-./run_loader -c ~/pathto/config.json ~/pathto/data.csv
+	./run_loader -c ~/pathto/config.json ~/pathto/data.csv
 
 ```
 
-
-** 2. Use list of data files for loading **
+* Use list of data files for loading:
 
 ```java
 
-./run_loader -c ~/pathto/config.json data1.csv data2.csv data3.csv
+	./run_loader -c ~/pathto/config.json data1.csv data2.csv data3.csv
 
 ```
 
-**3. Use directory name of data files for loading:**
-```java
-
-./run_loader -c ~/pathto/config.json data/
-
-```
-**4. Specify timezone of the location from where data dump is taken. Its optional, if source and destination are same.**
+* Use directory name of data files for loading:
 
 ```java
 
-./run_loader -c ~/pathto/configdata.csv -T PST
+	./run_loader -c ~/pathto/config.json data/
+
+```
+* Specify timezone of the location from where data dump is taken. Its optional, if source and destination are same.
+
+```java
+
+	./run_loader -c ~/pathto/config.csv -T PST data/
 
 ```
 
+* Specify write action for existing records:
+
+```java
+
+	./run_loader -c ~/pathto/config.csv -wa update data/
+
+```
 
