@@ -156,18 +156,18 @@ public class Parser {
 			log.info(String.format("Number of columns: %d(metadata) + %d(bins)", (metadataColumnDefs.size()), binColumnDefs.size()));
 			processConfig = true;
 		} catch (IOException ie) {
-			log.error("File:"+ Utils.getFileName(file.getName()) + " Config Error: " + ie.toString());
+			log.error("File:"+ Utils.getFileName(file.getName()) + " Config i/o Error: " + ie.toString());
 			if(log.isDebugEnabled()){
 				ie.printStackTrace();
 			}
 		} catch (ParseException pe) {
-			log.error("File:"+ Utils.getFileName(file.getName()) + " Config Error: " + pe.toString());
+			log.error("File:"+ Utils.getFileName(file.getName()) + " Config parsing Error: " + pe.toString());
 			if(log.isDebugEnabled()){
 				pe.printStackTrace();
 			}
 		
 		} catch (Exception e) {
-			log.error("File:"+ Utils.getFileName(file.getName()) + " Config Error: " + e.toString());
+			log.error("File:"+ Utils.getFileName(file.getName()) + " Config unknown Error: " + e.toString());
 			if(log.isDebugEnabled()){
 				e.printStackTrace();
 			}
