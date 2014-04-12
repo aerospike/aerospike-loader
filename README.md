@@ -9,8 +9,7 @@
     - [Config file](doc/configformatt.md)
     - [Data file] (doc/datafileformat.md)
 - [Examples](doc/examples.md)
-
-
+    -[Demo examples](#demo example)
 <a name="Prerequisites"></a>
 ## Prerequisites
 * Java 1.6 or higher
@@ -66,4 +65,11 @@ Options are:
 -wt,--write-threads <arg>        Number of writer threads (default: Number of cores * 5)
 
 ```
+
+<a name="demo example"></a>
+## Demo example
+Example directory contains two file one is allDatatype.json and data.csv. Run following command to load data from data file.
+
+   ./run_loader -h localhost -c example/allDatatype.json example/data.csv
+
 
