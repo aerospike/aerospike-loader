@@ -57,6 +57,7 @@ Configuration file is used to map data in datafile to store in aerospike server.
   ]
 }
 ```
+
 **2. We can give static values for a record.**
 E.g. we can add extra information for a record. To do that add following to binlist.
 
@@ -66,6 +67,7 @@ E.g. we can add extra information for a record. To do that add following to binl
       "value": "xyz database"
     }
 ```
+
 **3. To use header information from data file use column_name. It will use column name for mapping.**
 
 ```json
@@ -113,33 +115,35 @@ E.g. we can add extra information for a record. To do that add following to binl
 <a name="option usage"></a>
 ## Option usage example
 
-** With all default values run aerospike loader as follows:
+
+   ** 1. With all default values, run aerospike loader as follows: **
 
 ```java
 
-/run_loader -c ~/pathto/config.json ~/pathto/data.csv
+./run_loader -c ~/pathto/config.json ~/pathto/data.csv
 
 ```
 
-** Use list of data files for loading
+
+** 2. Use list of data files for loading **
 
 ```java
 
-/run_loader -c ~/pathto/config.json data1.csv data2.csv data3.csv
+./run_loader -c ~/pathto/config.json data1.csv data2.csv data3.csv
 
 ```
 
-** With all default values run, aerospike loader as follows:
+**3. Use directory name of data files for loading:**
 ```java
 
-/run_loader -c ~/pathto/config.json data.csv
+./run_loader -c ~/pathto/config.json data/
 
 ```
-** Specify timezone of the location from where data dump is taken. Its optional, if source and destination are same.
+**4. Specify timezone of the location from where data dump is taken. Its optional, if source and destination are same.**
 
 ```java
 
-/run_loader -c ~/pathto/configdata.csv -T PST
+./run_loader -c ~/pathto/configdata.csv -T PST
 
 ```
 
