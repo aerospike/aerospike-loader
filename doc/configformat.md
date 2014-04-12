@@ -1,6 +1,5 @@
 # Configuration file
->The Aerospike-loader configuration file specifies the schema mapping of the source data set to the Aerospike database, as well as specifies attributes to help parse the source data files.
-Format of this file is in JSON.
+>The Aerospike-loader configuration file specifies the schema mapping of the source data set to the Aerospike database, as well as specifies attributes to help parse the source data files. Format of this file is in JSON. To write configuration file we need preliminary information from data file like column header and type of data.
 
 - [Sample Config](#config)
 - [Keywords Supported](#keyword)
