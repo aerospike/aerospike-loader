@@ -6,7 +6,7 @@
 - [Installation](#Installation)
 - [Usage](#Usage)
     - [Options](doc/options.md)
-    - [Config file](doc/configformatt.md)
+    - [Config file](doc/configformat.md)
     - [Data file] (doc/datafileformat.md)
 - [Examples](doc/examples.md)
     - [Demo examples](#demoexample)
