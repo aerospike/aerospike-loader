@@ -12,8 +12,8 @@
 ```c
 user_location,userid,last_visited, set
 India, userid1, 08/16/2011, facebook
-India, userid2, 08/17/2011, Tweeter
-USA, userid3, 08/16/2011, Tweeter
+India, userid2, 08/17/2011, Twitter
+USA, userid3, 08/16/2011, Twitter
 ```
 
 
@@ -139,7 +139,7 @@ E.g. we can add extra information for a record. To do that add following to binl
 	./run_loader -c ~/pathto/config.json data/
 
 ```
-* Specify timezone of the location from where data dump is taken. Its optional, if source and destination are same.
+* Specify time zone of the location from where data dump is taken. Its optional, if source and destination are same.
 
 ```java
 
