@@ -358,7 +358,7 @@ public class AerospikeLoad implements Runnable {
 						}
 						
 						//check for missing entries in config file
-						if(binColumnDefs.get(i).binValuePos < 0 || binColumnDefs.get(i).binValueHeader == null) {
+						if(binColumnDefs.get(i).binValuePos < 0 && binColumnDefs.get(i).binValueHeader == null) {
 							throw new Exception("Information missing(Value header or bin mapping) in config file:" + binColumnDefs.get(i));
 						}
 						
