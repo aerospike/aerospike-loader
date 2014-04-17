@@ -9,6 +9,7 @@
 
 <a name="config"></a>
 ## Sample configuration file:
+Following config file maps data file having 4 columns. First line of data file contains column names which we can use for mapping or we can use column_position for mapping. This config file defines key and set mapping from 2nd and 4th column respectively. Two bins are mapped named bin1 from column position 3 and bin2 from column name last-visited.
 ``` c
 {
   "version" : "1.0",
