@@ -6,10 +6,11 @@
 - [Installation](#Installation)
 - [Usage](#Usage)
     - [Options](doc/options.md)
-    - [Config file](doc/configformat.md)
-    - [Data file] (doc/datafileformat.md)
+    - [Config file format](doc/configformat.md)
+    - [Data file format](doc/datafileformat.md)
 - [Examples](doc/examples.md)
     - [Demo examples](#demoexample)
+    - [Detail examples](doc/examples.md)
 
 <a name="Prerequisites"></a>
 ## Prerequisites
@@ -18,7 +19,7 @@
 
 <a name="Dependencies"></a>
 ##Dependencies
-Following dependencies are used:
+Following dependencies are used and downloaded automatically:
 * Aerospike Java client 3.0.22 or greater
 * Apache commons cli 1.2
 * Log4j 1.2.14
@@ -38,16 +39,13 @@ Following dependencies are used:
 
 <a name="Usage"></a>
 ## Usage
-Use run_loader script to run this tool using options and data file.  
+Use **run_loader** script to run this tool using options and data files.  
     
         $ ./run_loader <options> <data file names>
 "data file names" can be list of space separated files, or a directory name containing data files. See "Data Files" section later.
 
-###Sample example for use of all options:
-Following command runs aerospike loader onto aerospike server. Server ip is nodex(-h nodex) and port to use is 3000(-p 3000). Data will be inserted into namespace test(-n test) under set name demo(-s demo). Aerospike loader uses 4 reader thread(-rt 4) to read data from 4 different files and 20 writter thread(-wt 20) to write parallelly to aerospike server. The write operation timeout is 3000 mili seconds(-tt 3000). This operation will stop after getting 100 errors(-ec 100). Every record is loaded with expiration time of 30 days(-et 2592000). Timezone is PST where the data dump is taken(-T PST). Write action is update the record if it already exists(-wa update). config.json contains data mapping information(-c ~/pathto/config.json ) . datafiles/ contain all the data dump files.
 
-        $ ./run_loader -h nodex -p 3000 -n test -s demo -tt 3000 -et 3600 -et 2592000 -ec 100 -rt 4 -wt 20 -T PST -wa update -c ~/pathto/config.json datafiles/
-Options are:
+__Options are__:
 
 ``` java
 -c,--config <arg>                Column definition file name
@@ -66,6 +64,14 @@ Options are:
 -wt,--write-threads <arg>        Number of writer threads (default: Number of cores * 5)
 
 ```
+
+###Sample example for use of all options:
+Following command runs aerospike loader onto aerospike server. Server ip is nodex(-h nodex) and port to use is 3000(-p 3000). Data will be inserted into namespace test(-n test) under set name demo(-s demo). Aerospike loader uses 4 reader thread(-rt 4) to read data from 4 different files and 20 writter thread(-wt 20) to write parallelly to aerospike server. The write operation timeout is 3000 mili seconds(-tt 3000). This operation will stop after getting 100 errors(-ec 100). Every record is loaded with expiration time of 30 days(-et 2592000). Timezone is PST where the data dump is taken(-T PST). Write action is update the record if it already exists(-wa update). config.json contains data mapping information(-c ~/pathto/config.json ) . datafiles/ contain all the data dump files.
+
+        $ ./run_loader -h nodex -p 3000 -n test -s demo -tt 3000 -et 3600 -et 2592000 -ec 100 -rt 4 -wt 20 -T PST -wa update -c ~/pathto/config.json datafiles/
+
+A variety of example applications are provided in the examples directory. See the examples/README.md for details.
+
 
 <a name="demoexample"></a>
 ## Demo example
