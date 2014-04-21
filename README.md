@@ -1,6 +1,7 @@
 #Aerospike Loader
 > Aerospike Loader is a tool which parses a set of files with known format, and load the data into Aerospike server. Currently the tool supports CSV files.
 
+- [Features](doc/features.md)
 - [Prerequisites](#Prerequisites)
 - [Dependencies](#Dependencies)
 - [Installation](#Installation)
