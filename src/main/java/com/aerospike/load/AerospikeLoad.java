@@ -293,7 +293,7 @@ public class AerospikeLoad implements Runnable {
 								metadataColumnDefs.get(i).binValueHeader = binName.get(metadataColumnDefs.get(i).binValuePos);
 						}
 					}
-					if(metadataColumnDefs.get(i).binValuePos < 0) {
+					if((!metadataColumnDefs.get(i).staticValue) && (metadataColumnDefs.get(i).binValuePos < 0)) {
 						throw new Exception("Information for bin mapping is missing in config file:" + metadataColumnDefs.get(i));
 					}
 

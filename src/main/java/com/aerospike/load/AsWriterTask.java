@@ -170,17 +170,21 @@ public class AsWriterTask implements Callable<Integer> {
 			
 			//retrieve set name first
 			for (ColumnDefinition metadataColumn : this.metadataMapping) {
-				String metadataRawText = this.columns.get(metadataColumn.getBinValuePos());
-				if(metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.SET))
-					if(this.set == null){
-						this.set = metadataRawText;
+				if (metadataColumn.staticValue  && metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.SET)) {
+					this.set = metadataColumn.binValueHeader;
+				} else {
+					String metadataRawText = this.columns.get(metadataColumn.getBinValuePos());
+					if(metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.SET)){
+						if(this.set == null){
+							this.set = metadataRawText;
+						}
 					}
+				}
 			}
-			
 			// use set name to create key
 			for(ColumnDefinition metadataColumn : this.metadataMapping){
-				String metadataRawText = this.columns.get(metadataColumn.getBinValuePos());
 				if(metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.KEY)){
+					String metadataRawText = this.columns.get(metadataColumn.getBinValuePos());
 					if (metadataColumn.getSrcType() == SrcColumnType.INTEGER){
 						Integer integer = Integer.parseInt(metadataRawText); 
 						this.key = new Key(this.nameSpace, this.set, integer);

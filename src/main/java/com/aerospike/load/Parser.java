@@ -135,7 +135,11 @@ public class Parser {
 			
 			// Get set definition of records. Optional because we can get "set" name from user.
 			if((obj =  getJsonObject(jobj,Constants.SET)) != null) {
-				metadataColumnDefs.add(getColumnDefs( (JSONObject) obj, Constants.SET));
+				if (obj instanceof String) {
+					metadataColumnDefs.add(new ColumnDefinition(Constants.SET, obj.toString() , true, true, "string", "string", null, -1, -1, null, null));
+				} else {
+					metadataColumnDefs.add(getColumnDefs( (JSONObject) obj, Constants.SET));
+				}
 			} 
 			
 			// Get bin column definitions 
