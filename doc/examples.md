@@ -73,9 +73,15 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
     - add following line to binlist in config file for __float__ type data.
        -  {"name": "rating", "value": {"column_name": "user_rating", "type" : "float"}
     }
-    - add following line to binlist in config file for __timestamp__ type data.
+    - add following line to binlist in config file for __timestamp__ type data and store it as integer.
       - { "name": "recent_visit", "value": {"column_name": "last_visited", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
     }
+    - add following line to binlist in config file for __timestamp__ type data and store it as string.
+      - { "name": "recent_visit", "value": {"column_name": "last_visited", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "string"}
+    }
+- Specify static set name in config file as follows:
+    - "set": "setnameforall",
+    
 
 
 <a name="without header"></a>
