@@ -45,6 +45,8 @@ Use **run_loader** script to run this tool using options and data files.
         $ ./run_loader <options> <data file names>
 "data file names" can be list of space separated files, or a directory name containing data files. See "Data Files" section later.
 
+For detail usage refer [Options](doc/options.md), [Config file format](doc/configformat.md), [Data file format](doc/datafileformat.md).
+
 
 __Options are__:
 
