@@ -11,7 +11,7 @@
     - [Data file format](doc/datafileformat.md)
 - [Examples](doc/examples.md)
     - [Demo examples](#demoexample)
-    - [Detail examples](doc/examples.md)
+    - [Detailed examples](doc/examples.md)
 
 <a name="Prerequisites"></a>
 ## Prerequisites
