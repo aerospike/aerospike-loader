@@ -58,7 +58,7 @@ Following config file maps data file having 4 columns. First line of data file c
 | input_type | input_type is to specify the format of data file. Currently only "csv" is supported.                         | Required                               | "csv"                    | No attributes                                                             |
 | csv_style  | csv_style is used for csv formatted data.                                                                    | Required ( only if input_style is csv) | list of attribute values | delimiter, n_columns_datafile, ignore_first_line                          |
 | key        | Key mapping from data file.                                                                                  | Required                               | list of attribute values | choice( column_position, column_name), type                               |
-| set        | Set name mapping from data file. Set name can be provided from command line. Set name is always string type. | Optional                               | list of attribute values | choice( column_position, column_name)                                     |
+| set        | Set name mapping from data file. Set name can be provided from command line or static value in config file. Set name is always string type. | Optional                               | list of attribute values | choice( column_position, column_name)                                     |
 | binlist    |  List of bin mapping  from data file.                                                                        | Required                               | Array of lists           | No direct attributes. Each list in array has two attributes: NAME, VALUE . |
 
 <a name="csv_style"></a>
@@ -71,12 +71,13 @@ Following config file maps data file having 4 columns. First line of data file c
 | ignore_first_line 	| This attribute is used to skip first line of data file where header information is present.  	| Required                  	| "true","false".                                                              	|
 
 <a name="key/set"></a>
-### key/Set Attributes:
+### Key/Set Attributes: 
+Key is unique and always picked from data file. 
 
 | Keywords                     | Description                                                                | Required/ Optional                             | Value           |
 |------------------------------|----------------------------------------------------------------------------|------------------------------------------------|-----------------|
 | column_position/ column_name | Column position number in data file or column name in header of data file. | Require one of column_position/ column_name. | integer/ string |
-| type                        | Type of key/set. Set name data should be string.                           | Require                                  | string          |
+| type                         | Type of key/set. Set name should be string.                                | Require                                  | string          |
 <a name="binlist"></a>
 ### Binlist Attributes:
 "binlist" contains array of lists. So there is no direct attributes. Each list in binlist has two attributes one is "name"(name mapping for each bin) and other one is "value"(value mapping for each bin). In following table some sub attributes for "name/value" is described. "name" attribute doesn't have dst_type and encoding attribute, and type is string. "name/value" can have static/fixed values or we can pick name/value from data file. Length of each bin name should be less than or equal to 14.
