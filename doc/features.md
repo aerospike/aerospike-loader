@@ -1,3 +1,5 @@
+#Aerospike load functionality:
+
 - From initial experiments we found the performance of the loader is loading 260-270k rows per second per machine on a CPU MHz: 1600.000, 12 core machine. 
 - There is a config file that will specify the schema / data layout of the input strings, and the output into the Aerospike cluster. This data schema specification is in JSON.
 - Input data can support arbitrary specifiers (specified in the schema description), and the data type of the input entry (string, integer, float, timestamp, blob). 
