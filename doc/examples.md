@@ -7,6 +7,7 @@ Each example given below is for different use cases. To learn the usage quickly,
 - [With header in data file](#with header)
 - [Without header in data file](#without header)
 - [Static value](#static value)
+- [System time](#system_time)
 - [Options usage](#options)
 
 <a name="with header"></a>
@@ -177,8 +178,48 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
 ### Explanation:
 - Extra information load_from xyz database is added to each record. This is called as static bin mapping.
 
+<a name="system_time"></a>
+##__4. System time__:
+Apart from loading data from file, we can add system time of writting for each record. Example given below inserts user name and System time of writting in millisecond. this data is taken as extra information.
+
+### Data file content:
+```CSV
+IND, userid1, 04/1/2014, facebook, 20, X20, 583230, 8.1
+USA, userid2, 03/18/2014, twitter, 27, X2, 5832, 6.4
+UK, userid3, 01/9/2014, twitter, 21, X3, 5833, 4.3
+UK, userid4, 01/2/2014, facebook, 16, X9, 5839, 5.9
+IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
+```
+### Config file content:
+```JSON
+{
+  "version" : "1.0",
+  "input_type" : "csv",
+  "csv_style": { "delimiter": "," , "n_columns_datafile": 8, "ignore_first_line": false},
+
+
+  "key": {"column_position":2, "type": "string"},
+
+  "set": { "column_position":4 , "type": "string"},
+
+  "binlist": [
+    
+    {
+     "name": "name",
+     "value": {"column_position": 6, "type" : "String"}
+    },
+    {"name": "write_time",
+     "value": {"column_name": "System_time", "type" : "timestamp", "encoding":"MM/dd/yy HH:mm:ss.SSS", "dst_type": "integer"}
+    }
+    
+  ]
+}
+```
+### Explanation:
+- Extra information write_time is added to each record. If encoding contains SSS then write_time will be in milliseconds or else it is in seconds.
+
 <a name="options"></a>
-##__4. Option usage__
+##__5. Option usage__:
 
 
 * With all default values, run aerospike loader as follows:
