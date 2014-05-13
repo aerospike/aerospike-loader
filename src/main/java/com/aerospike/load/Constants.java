@@ -66,5 +66,5 @@ public class Constants {
 	public static final String SYSTEM_TIME			= "system_time";
 
 	public static final int MajorV					= 1;
-	public static final int MinorV					= 0;
+	public static final int MinorV					= 1;
 }
