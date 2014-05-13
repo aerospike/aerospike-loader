@@ -349,8 +349,11 @@ public class AerospikeLoad implements Runnable {
 									//TODO check for json_path
 								}
 							} else {
-								if(params.ignoreFirstLine)
+								if(params.ignoreFirstLine && binName.contains(binColumnDefs.get(i).binValueHeader)){
 									binColumnDefs.get(i).binValuePos = binName.indexOf(binColumnDefs.get(i).binValueHeader);
+								} else if(!binName.contains(binColumnDefs.get(i).binValueHeader) && !binColumnDefs.get(i).binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)) {
+									throw new Exception("Wrong column name mentioned in config file:" + binColumnDefs.get(i).binValueHeader);
+								}
 							}
 						}else {
 							if(params.ignoreFirstLine)
