@@ -202,7 +202,14 @@ public class AsWriterTask implements Callable<Integer> {
 				}
 
 				if (!binColumn.staticValue) {
-					String binRawText = this.columns.get(binColumn.getBinValuePos());
+					String binRawText = null;
+					if(binColumn.binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)){
+						SimpleDateFormat sdf = new SimpleDateFormat(binColumn.getEncoding());//dd/MM/yyyy
+						Date now = new Date();
+						binRawText = sdf.format(now);
+					}else{
+						binRawText = this.columns.get(binColumn.getBinValuePos());
+					}
 
 					if(binRawText.equals("")) continue;
 
@@ -321,10 +328,16 @@ public class AsWriterTask implements Callable<Integer> {
 								Date formatDate = format.parse(binRawText);
 								long miliSecondForDate = formatDate.getTime()
 										- timeZoneOffset;
+								
+								if(binColumn.getEncoding().contains(".SSS") && binColumn.binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)){
+									//We need time in miliseconds so no need to change it to seconds
+								} else {
+									miliSecondForDate = miliSecondForDate/1000;
+								}
 								bin = new Bin(binColumn.getBinNameHeader(),
-										miliSecondForDate / 1000);
+										miliSecondForDate);
 								log.trace("Date format:" + binRawText
-										+ " in seconds:" + miliSecondForDate / 1000);
+										+ " in seconds:" + miliSecondForDate);
 							} catch (java.text.ParseException e) {
 								e.printStackTrace();
 							}

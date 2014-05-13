@@ -61,7 +61,10 @@ public class Constants {
 	public static final String DST_TYPE				= "dst_type";
 	public static final String ENCODING				= "encoding";
 	public static final String HEX_ENCODING			= "hex";
+	
+	//keywords to insert extra information specified by user
+	public static final String SYSTEM_TIME			= "system_time";
 
 	public static final int MajorV					= 1;
-	public static final int MinorV					= 0 ;
+	public static final int MinorV					= 0;
 }
