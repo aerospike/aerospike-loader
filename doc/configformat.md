@@ -88,3 +88,5 @@ Key is unique and always picked from data file.
 | type                         | Data type of source data. Supported data types are: integer, float, string, blob, timestamp.                                                                                                   | Require                                                       | string           |
 | dst_type                     | Source type data to aerospike type conversion. Supported data types are: integer, string, blob. Timestamp can be stored as integer/string, float is stored as 8 byte encoded byte array(blob). | Require if source type to destination type conversion needed. | string           |
 | encoding                     | Encoding format for data conversion from source to destination type. Blob type data  should be hex encoded. Timestamp type data can be encoded as "MM/DD/YYYY" if dst_type is integer.        | Require if dst_type is given                                  | string           |
+
+   __Note:__ Specify column_name:"system_time" in config file to insert extra bin with system time of write for each record.
