@@ -118,8 +118,13 @@ public class Utils {
 
 		char delimiter = ',';
 		boolean ignoreFirstLine = true;
+		
+		boolean verbose = false;
+		if (cl.hasOption("v")) {
+			verbose = true;
+		}
 
-		return new Parameters(host, port, namespace, set, ttl, Constants.CSV_FILE, delimiter, timeZoneOffset, ignoreFirstLine, abortErrorCount, writePolicy);
+		return new Parameters(host, port, namespace, set, ttl, Constants.CSV_FILE, delimiter, timeZoneOffset, ignoreFirstLine, verbose, abortErrorCount, writePolicy);
 	}
 	
 	/**

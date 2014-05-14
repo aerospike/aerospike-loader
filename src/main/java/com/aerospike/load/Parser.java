@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -42,6 +43,7 @@ import org.json.simple.parser.ParseException;
 public class Parser {
 	private static Logger log = Logger.getLogger(Parser.class);
 	
+	
 	/**
 	 * Process column definitions in JSON formated file and create two lists for metadata and bindata and one list for metadataLoader
 	 * @param file Config file name
@@ -54,6 +56,9 @@ public class Parser {
 	 */
 	public static boolean processJSONColumnDefinitions(File file, HashMap<String, String> metadataConfigs, List<ColumnDefinition> metadataColumnDefs, List<ColumnDefinition> binColumnDefs, Parameters params ) {
 		boolean processConfig = false;
+		if (params.verbose) {
+			log.setLevel(Level.DEBUG);				
+		}
 		try {
 			// Create parser object
 			JSONParser jsonParser = new JSONParser();

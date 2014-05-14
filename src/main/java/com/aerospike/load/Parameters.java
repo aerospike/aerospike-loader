@@ -36,6 +36,7 @@ public class Parameters {
 	char delimiter;
 	long timeZoneOffset;
 	boolean ignoreFirstLine;
+	boolean verbose;
 	int abortErrorCount;
 	WritePolicy writePolicy;
 	
@@ -49,6 +50,7 @@ public class Parameters {
 	 * @param fileType
 	 * @param delimiter
 	 * @param timeZoneOffset
+	 * @param verbose
 	 * @param ignoreFirstLine
 	 * @param abortAtError
 	 */
@@ -62,6 +64,7 @@ public class Parameters {
 			char delimiter,
 			long timeZoneOffset,
 			boolean ignoreFirstLine,
+			boolean verbose,
 			int abortErrorCount,
 			WritePolicy writePolicy
 			) {
@@ -74,6 +77,7 @@ public class Parameters {
 		this.delimiter = delimiter;
 		this.timeZoneOffset = timeZoneOffset;
 		this.ignoreFirstLine = ignoreFirstLine;
+		this.verbose = verbose;
 		this.abortErrorCount = abortErrorCount;
 		this.writePolicy = writePolicy;
 	}

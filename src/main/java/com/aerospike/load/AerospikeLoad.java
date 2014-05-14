@@ -134,7 +134,7 @@ public class AerospikeLoad implements Runnable {
 				return;
 			}
 
-			if (cl.hasOption("v")) {
+			if (params.verbose) {
 				log.setLevel(Level.DEBUG);				
 			}
 
@@ -220,7 +220,7 @@ public class AerospikeLoad implements Runnable {
 					String[] vNumber = metadata.split("\\.");
 					int v1 = Integer.parseInt(vNumber[0]);
 					int v2 = Integer.parseInt(vNumber[1]);
-					if((v1 >= Constants.MajorV) && (v2 >= Constants.MinorV)){
+					if((v1 <= Constants.MajorV) && (v2 <= Constants.MinorV)){
 						log.debug("Config version used:" + metadata);
 					} else 
 						throw new Exception("\"" + Constants.VERSION + ":" + metadata + "\" is not Supported");
@@ -349,10 +349,12 @@ public class AerospikeLoad implements Runnable {
 									//TODO check for json_path
 								}
 							} else {
-								if(params.ignoreFirstLine && binName.contains(binColumnDefs.get(i).binValueHeader)){
-									binColumnDefs.get(i).binValuePos = binName.indexOf(binColumnDefs.get(i).binValueHeader);
-								} else if(!binName.contains(binColumnDefs.get(i).binValueHeader) && !binColumnDefs.get(i).binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)) {
-									throw new Exception("Wrong column name mentioned in config file:" + binColumnDefs.get(i).binValueHeader);
+								if(params.ignoreFirstLine) {
+									if(binName.contains(binColumnDefs.get(i).binValueHeader)){
+										binColumnDefs.get(i).binValuePos = binName.indexOf(binColumnDefs.get(i).binValueHeader);
+									} else if(!binColumnDefs.get(i).binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)) {
+										throw new Exception("Wrong column name mentioned in config file:" + binColumnDefs.get(i).binValueHeader);
+									}
 								}
 							}
 						}else {

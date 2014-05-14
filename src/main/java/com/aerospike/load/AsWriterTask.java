@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -97,6 +98,9 @@ public class AsWriterTask implements Callable<Integer> {
 		this.abortErrorCount = params.abortErrorCount;
 		this.lineNumber = lineNumber;
 		this.lineSize = lineSize;
+		if(params.verbose){
+			log.setLevel(Level.DEBUG);
+		}
 	}
 
 	/**
@@ -203,7 +207,7 @@ public class AsWriterTask implements Callable<Integer> {
 
 				if (!binColumn.staticValue) {
 					String binRawText = null;
-					if(binColumn.binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)){
+					if(binColumn.binValueHeader != null && binColumn.binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)){
 						SimpleDateFormat sdf = new SimpleDateFormat(binColumn.getEncoding());//dd/MM/yyyy
 						Date now = new Date();
 						binRawText = sdf.format(now);
