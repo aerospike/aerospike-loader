@@ -12,6 +12,7 @@
 - [Examples](doc/examples.md)
     - [Demo examples](#demoexample)
     - [Detailed examples](doc/examples.md)
+- [Release Notes](doc/releasenotes.md)
 
 <a name="Prerequisites"></a>
 ## Prerequisites
