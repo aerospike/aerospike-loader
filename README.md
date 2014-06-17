@@ -1,16 +1,16 @@
 #Aerospike Loader
-> Aerospike Loader is a tool which parses a set of files with known format, and load the data into Aerospike server. Currently the tool supports CSV files.
+> Aerospike Loader parses a set of .CSV files and loads the data into Aerospike server.
 
 - [Features](doc/features.md)
 - [Prerequisites](#Prerequisites)
-- [Dependencies](#Dependencies)
 - [Installation](#Installation)
+- [Dependencies](#Dependencies)
 - [Usage](#Usage)
     - [Options](doc/options.md)
     - [Config file format](doc/configformat.md)
     - [Data file format](doc/datafileformat.md)
 - [Examples](doc/examples.md)
-    - [Demo examples](#demoexample)
+    - [Demo example](#demoexample)
     - [Detailed examples](doc/examples.md)
 - [Release Notes](doc/releasenotes.md)
 
@@ -19,37 +19,34 @@
 * Java 1.6 or higher
 * Maven 2.3.2
 
-<a name="Dependencies"></a>
-##Dependencies
-Following dependencies are used and downloaded automatically:
-* Aerospike Java client 3.0.22 or greater
-* Apache commons cli 1.2
-* Log4j 1.2.14
-* Junit 4.4
-* Json-simple 1.1.1
-
 <a name="Installation"></a>
 ## Installation
 * Source code is available on git-hub:
 
-        $ git clone git@github.com:citrusleaf/aerospike-loader.git
+        $ git clone git@github.com:aerospike/aerospike-loader.git
 
 * Then build the utility by running following:
 
         $ cd aerospike-loader
         $ mvn clean install
 
+<a name="Dependencies"></a>
+##Dependencies
+Following dependencies are downloaded automatically:
+* Aerospike Java client 3.0.22 or greater
+* Apache commons cli 1.2
+* Log4j 1.2.14
+* Junit 4.4
+* Json-simple 1.1.1
+
 <a name="Usage"></a>
 ## Usage
-Use **run_loader** script to run this tool using options and data files.  
+Use **run_loader** script along with options and data files.  
     
-        $ ./run_loader <options> <data file names>
-"data file names" can be list of space separated files, or a directory name containing data files. See "Data Files" section later.
+        $ ./run_loader <options> <data file name(s)/directory>
+"data file name(s)/directory" can either be space delimited files or a directory name containing data files. See "Data Files" section for more details.
 
-For detailed usage refer [Options](doc/options.md), [Config file format](doc/configformat.md), [Data file format](doc/datafileformat.md).
-
-
-__Options are__:
+__Options__:
 
 ``` java
 -c,--config <arg>                Column definition file name
@@ -69,18 +66,32 @@ __Options are__:
 
 ```
 
-###Sample example for use of all options:
-Following command runs aerospike loader onto aerospike server. Server ip is nodex(-h nodex) and port to use is 3000(-p 3000). Data will be inserted into namespace test(-n test) under set name demo(-s demo). Aerospike loader uses 4 reader thread(-rt 4) to read data from 4 different files and 20 writter thread(-wt 20) to write parallelly to aerospike server. The write operation timeout is 3000 mili seconds(-tt 3000). This operation will stop after getting 100 errors(-ec 100). Every record is loaded with expiration time of 30 days(-et 2592000). Timezone is PST where the data dump is taken(-T PST). Write action is update the record if it already exists(-wa update). config.json contains data mapping information(-c ~/pathto/config.json ) . datafiles/ contain all the data dump files.
+###Sample usage of all options:
 
         $ ./run_loader -h nodex -p 3000 -n test -s demo -tt 3000 -et 3600 -et 2592000 -ec 100 -rt 4 -wt 20 -T PST -wa update -c ~/pathto/config.json datafiles/
 
-A variety of example applications are provided in the examples directory. See the examples/README.md for details.
+Where:
 
+Server IP: nodex (-h nodex)
+Port: 3000 (-p 3000)
+Namespace: test (-n test) 
+Set: demo (-s demo)
+Read Threads: 4 (-rt 4)
+Write Threads: 20 (-wt 20)
+Write Operation Timeout (in milliseconds): 3000 (-tt 3000)
+Write Error Threshold: 100 (-ec 100) -- Write operation will stop once number of errors hits 100
+Record Expiration: 30 days (-et 2592000)
+Timezone: PST (-T PST)
+Write Action: Update, if it already exists (-wa update) 
+Data Mapping: File containing data mappings (-c ~/pathto/config.json)
+Data Files: Folder containing data giles (datafiles/)
+
+For more details, refer to [Options](doc/options.md).
 
 <a name="demoexample"></a>
 ## Demo example
-Example directory contains two file one is allDatatype.json and data.csv. Run following command to load data from data file.
+Example directory contains two files: allDatatype.json and data.csv. Run the following command to load data from data file data.csv.
 
     ./run_loader -h localhost -c example/allDatatype.json example/data.csv
 
-
+For more examples, see the examples/README.md.
