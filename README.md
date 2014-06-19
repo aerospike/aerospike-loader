@@ -50,21 +50,22 @@ __Options__:
 
 ``` java
 -c,--config <arg>                Column definition file name
--ec,--abort-error-count <arg>    Error count to abort (default: 0)
+-ec,--abort-error-count <arg>    Error threshold to abort (default: 0)
 -et,--expiration-time <arg>      Expiration time of records in seconds (default: never expire)
 -h,--host <arg>                  Server hostname (default: localhost)
 -n,--namespace <arg>             Namespace (default: test)
 -p,--port <arg>                  Server port (default: 3000)
--rt,--read-threads <arg>         Number of reader threads (default: Number of cores * 1)
+-rt,--read-threads <arg>         Number of read threads (default: Number of cores * 1)
 -s,--set <arg>                   Set name. (default: null)
--T,--timezone <arg>              Timezone of source where data dump is taken (default: local timezone)
--tt,--transaction-timeout <arg>  write transaction timeout in miliseconds(default: No timeout)
--u,--usage                       Print usage.
--v,--verbose                     Logging all
--wa,--write-action <arg>         Write action if key already exists (default: update)
--wt,--write-threads <arg>        Number of writer threads (default: Number of cores * 5)
-
+-T,--timezone <arg>              Time zone of data backup source (default: local timezone)
+-tt,--transaction-timeout <arg>  Write transaction timeout in milliseconds(default: No timeout)
+-u,--usage                       Print usage
+-v,--verbose                     Detailed log
+-wa,--write-action <arg>         Write action (default: update)
+-wt,--write-threads <arg>        Number of write threads (default: Number of cores * 5)
 ```
+
+For more details, refer to [Options](doc/options.md).
 
 ###Sample usage of all options:
 
@@ -85,8 +86,6 @@ Timezone: PST (-T PST)
 Write Action: Update, if it already exists (-wa update) 
 Data Mapping: File containing data mappings (-c ~/pathto/config.json)
 Data Files: Folder containing data giles (datafiles/)
-
-For more details, refer to [Options](doc/options.md).
 
 <a name="demoexample"></a>
 ## Demo example
