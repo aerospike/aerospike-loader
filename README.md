@@ -74,19 +74,19 @@ For more details, refer to [Options](doc/options.md).
 Where:
 
 ```
-Server IP: nodex (-h nodex)
-Port: 3000 (-p 3000)
-Namespace: test (-n test) 
-Set: demo (-s demo)
-Read Threads: 4 (-rt 4)
-Write Threads: 20 (-wt 20)
-Write Operation Timeout (in milliseconds): 3000 (-tt 3000)
-Write Error Threshold: 100 (-ec 100) -- Write operation will stop once number of errors hits 100
-Record Expiration: 30 days (-et 2592000)
-Timezone: PST (-T PST)
-Write Action: Update, if it already exists (-wa update) 
-Data Mapping: File containing data mappings (-c ~/pathto/config.json)
-Data Files: Folder containing data giles (datafiles/)
+Server IP:                                  nodex (-h)
+Port:                                       3000 (-p)
+Namespace:                                  test (-n) 
+Set:                                        demo (-s)
+Read Threads:                               4 (-rt)
+Write Threads:                              20 (-wt)
+Write Operation Timeout (in milliseconds):  3000 (-tt)
+Write Error Threshold:                      100 (-ec)
+Record Expiration:                          2592000 (-et)
+Timezone:                                   PST (-T)
+Write Action:                               update (-wa) 
+Data Mapping:                               ~/pathto/config.json (-c)
+Data Files:                                 datafiles/
 ```
 
 <a name="demoexample"></a>
