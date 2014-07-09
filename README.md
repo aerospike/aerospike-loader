@@ -73,6 +73,7 @@ For more details, refer to [Options](doc/options.md).
 
 Where:
 
+```
 Server IP: nodex (-h nodex)
 Port: 3000 (-p 3000)
 Namespace: test (-n test) 
@@ -86,6 +87,7 @@ Timezone: PST (-T PST)
 Write Action: Update, if it already exists (-wa update) 
 Data Mapping: File containing data mappings (-c ~/pathto/config.json)
 Data Files: Folder containing data giles (datafiles/)
+```
 
 <a name="demoexample"></a>
 ## Demo example
