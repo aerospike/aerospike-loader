@@ -23,7 +23,7 @@
 ## Installation
 * Source code is available on git-hub:
 
-        $ git clone git@github.com:aerospike/aerospike-loader.git
+        $ git clone https://github.com/aerospike/aerospike-loader.git
 
 * Then build the utility by running following:
 
