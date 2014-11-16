@@ -219,12 +219,13 @@ public class AsWriterTask implements Callable<Integer> {
 
 					switch (binColumn.getSrcType()) {
 					case INTEGER:
-						Integer integer;
+						//Server stores all integer type data in 64bit so use long
+						Long integer;
 						try {
-							integer = Integer.parseInt(binRawText);
+							integer = Long.parseLong(binRawText);
 							bin = new Bin(binColumn.getBinNameHeader(), integer);
 						} catch (Exception pi) {
-							log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Integer Parse Error:" + pi);
+							log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Integer/Long Parse Error:" + pi);
 						}
 
 						break;
