@@ -190,7 +190,7 @@ public class AsWriterTask implements Callable<Integer> {
 				if(metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.KEY)){
 					String metadataRawText = this.columns.get(metadataColumn.getBinValuePos());
 					if (metadataColumn.getSrcType() == SrcColumnType.INTEGER){
-						Integer integer = Integer.parseInt(metadataRawText); 
+						Long integer = Long.parseLong(metadataRawText); 
 						this.key = new Key(this.nameSpace, this.set, integer);
 					} else {
 						this.key = new Key(this.nameSpace, this.set, metadataRawText);
