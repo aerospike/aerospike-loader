@@ -44,7 +44,9 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.admin.Role;
 import com.aerospike.client.AerospikeException;
+import com.aerospike.client.policy.ClientPolicy;
 /**
  * This is the main class for the Aerospike import. 
  * 
@@ -97,6 +99,8 @@ public class AerospikeLoad implements Runnable {
 			Options options = new Options();
 			options.addOption("h", "host", true, "Server hostname (default: localhost)");
 			options.addOption("p", "port", true, "Server port (default: 3000)");
+			options.addOption("U", "user", true, "User name");
+			options.addOption("P", "password", true, "Password");
 			options.addOption("n", "namespace", true, "Namespace (default: test)");
 			options.addOption("s", "set", true, "Set name. (default: null)");
 			options.addOption("c", "config", true, "Column definition file name");
@@ -114,6 +118,22 @@ public class AerospikeLoad implements Runnable {
 			CommandLineParser parser = new PosixParser();
 			CommandLine cl = parser.parse(options, args, false);
 
+			ClientPolicy clientPolicy = new ClientPolicy();
+			clientPolicy.user = cl.getOptionValue("user");
+			clientPolicy.password = cl.getOptionValue("password");
+		
+			if (clientPolicy.user != null && clientPolicy.password == null) {
+				java.io.Console console = System.console();
+			
+				if (console != null) {
+					char[] pass = console.readPassword("Enter password:");
+				
+					if (pass != null) {
+						clientPolicy.password = new String(pass);
+					}
+				}
+			}
+
 			if (args.length == 0 || cl.hasOption("u")) {
 				logUsage(options);
 				return;
@@ -128,12 +148,17 @@ public class AerospikeLoad implements Runnable {
 			params = Utils.parseParameters(cl);
 
 			//Get client instance
-			AerospikeClient client = new AerospikeClient(params.host, params.port);
+			AerospikeClient client = new AerospikeClient(clientPolicy, params.host, params.port);
 			if(!client.isConnected()) {
 				log.error("Client is not able to connect:" + params.host + ":" + params.port);
 				return;
 			}
 
+			//Check read-write role is given to user
+			if (!client.queryUser(null, clientPolicy.user).roles.contains(Role.ReadWrite)){
+				log.error("User role:" + client.queryUser(null, clientPolicy.user).roles.toString() + " Expected:" + Role.ReadWrite);
+				return;
+			}	
 			if (params.verbose) {
 				log.setLevel(Level.DEBUG);				
 			}

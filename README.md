@@ -28,12 +28,12 @@
 * Then build the utility by running following:
 
         $ cd aerospike-loader
-        $ mvn clean install
+        $ ./build
 
 <a name="Dependencies"></a>
 ##Dependencies
 Following dependencies are downloaded automatically:
-* Aerospike Java client 3.0.22 or greater
+* Aerospike Java client 3.1.2 or greater
 * Apache commons cli 1.2
 * Log4j 1.2.14
 * Junit 4.4
