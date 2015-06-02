@@ -1,0 +1,5 @@
+# Build Java projects with Maven.
+# Maven and Java must be installed prior to running this script.
+
+mvn clean
+mvn install -DskipTests
