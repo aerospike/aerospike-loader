@@ -66,6 +66,7 @@ import com.aerospike.client.AerospikeException;
  * -wa,--write-Action <arg>			Write action if key already exists (default: update)
  * -wt,--writerThreads<arg>			Number of writer threads (default: 5 * number of cores)
  * -rt,--readerThreads<arg>			Number of reader threads (default: 1 * number of cores)
+ * -uk --send-user-key                    	Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
  * 
  * The file names can be a series of file names or directories. 
  *
@@ -110,6 +111,7 @@ public class AerospikeLoad implements Runnable {
 			options.addOption("wa", "write-action", true, "Write action if key already exists (default: update)");
 			options.addOption("v", "verbose", false, "Logging all");
 			options.addOption("u", "usage", false, "Print usage.");
+			options.addOption("uk","send-user-key",false,"Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)");
 
 			CommandLineParser parser = new PosixParser();
 			CommandLine cl = parser.parse(options, args, false);
