@@ -88,7 +88,6 @@ public class AsWriterTask implements Callable<Integer> {
 		this.client = client;
 		this.writePolicy = params.writePolicy;
 		this.writePolicy.expiration = params.ttl;
-		this.writePolicy.sendKey = true;
 		this.timeZoneOffset = params.timeZoneOffset;
 		this.nameSpace = params.namespace;
 		this.set = params.set;

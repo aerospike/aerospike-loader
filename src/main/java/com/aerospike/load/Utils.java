@@ -112,9 +112,20 @@ public class Utils {
 		int abortErrorCount = Integer.parseInt(errorCount);
 
 		String writeAction = cl.getOptionValue("wa", "UPDATE");
+		
+		/**
+		 * Send user defined key in addition to hash digest on writes. The default is to not send the user defined key
+		 */ 
+		boolean sendKey = false;
+		if (cl.hasOption("uk")) {
+                       sendKey = true;
+		}
+
+		
 		WritePolicy writePolicy = new WritePolicy();
 		writePolicy.recordExistsAction = RecordExistsAction.valueOf(writeAction.toUpperCase());
 		writePolicy.timeout = to;
+		writePolicy.sendKey = sendKey;
 
 		char delimiter = ',';
 		boolean ignoreFirstLine = true;
