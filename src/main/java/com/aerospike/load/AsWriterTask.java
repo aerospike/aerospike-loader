@@ -22,7 +22,6 @@
 
 package com.aerospike.load;
 
-import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,7 +54,7 @@ public class AsWriterTask implements Callable<Integer> {
 	private long timeZoneOffset; 
 	private String fileName;
 	private int abortErrorCount;
-	
+
 	private Key key;
 	private List<Bin> bins;
 	private List<ColumnDefinition> metadataMapping = new ArrayList<ColumnDefinition>();
@@ -129,7 +128,7 @@ public class AsWriterTask implements Callable<Integer> {
 				counters.write.recordProcessed.addAndGet(this.lineSize);
 				counters.write.writeErrors.getAndIncrement();
 				errorTotal = (counters.write.readErrors.get() + counters.write.writeErrors.get() + counters.write.processingErrors.get());
-				
+
 				switch(ae.getResultCode()) {				
 				case ResultCode.TIMEOUT:
 					counters.write.writeTimeouts.getAndIncrement();
@@ -171,7 +170,7 @@ public class AsWriterTask implements Callable<Integer> {
 					throw new ParseException(lineNumber);
 				}
 			}
-			
+
 			//retrieve set name first
 			for (ColumnDefinition metadataColumn : this.metadataMapping) {
 				if (metadataColumn.staticValue  && metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.SET)) {
@@ -197,10 +196,10 @@ public class AsWriterTask implements Callable<Integer> {
 					}					
 				}	
 			}
-			
+
 			for (ColumnDefinition binColumn : this.binMapping){
 				Bin bin = null;
-				
+
 				if (!binColumn.staticName) {
 					binColumn.binNameHeader = this.columns.get(binColumn.binNamePos);
 				}
@@ -230,14 +229,9 @@ public class AsWriterTask implements Callable<Integer> {
 
 						break;
 					case FLOAT:
-
-						/**
-						 * Floating type data can be stored as 8 byte byte array.
- 						 */
 						try {
-							float binfloat = Float.parseFloat(binRawText);
-							byte [] byteFloat = ByteBuffer.allocate(8).putFloat(binfloat).array();
-							bin = new Bin(binColumn.getBinNameHeader(), byteFloat);
+							Double binDouble = Double.parseDouble(binRawText);
+							bin = new Bin(binColumn.getBinNameHeader(), binDouble);
 						} catch (Exception e) {
 							log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Floating number Parse Error:" + e);
 						}
@@ -251,7 +245,7 @@ public class AsWriterTask implements Callable<Integer> {
 								bin = new Bin(binColumn.getBinNameHeader(),
 										this.toByteArray(binRawText)); //TODO
 						}
-						
+
 						break;
 					case LIST:
 						/*
@@ -263,13 +257,27 @@ public class AsWriterTask implements Callable<Integer> {
 						 * No support for nested maps or nested lists
 						 * 
 						 */
-						List<String> list = new ArrayList<String>();
+
 						String[] listValues = binRawText.split(Constants.LIST_DELEMITER, -1);
 						if (listValues.length > 0) {
-							for (String value : listValues) {
-								list.add(value.trim());
+							List<Object> list = new ArrayList<Object>();
+							for (String valueString : listValues) {
+								/* 
+								 * guess the type
+								 */
+								try {
+									Double val = Double.parseDouble(valueString.trim());
+									list.add(val);
+								} catch (NumberFormatException e){
+									try {
+										Long val = Long.parseLong(valueString.trim());
+										list.add(val);
+									} catch (NumberFormatException ee){
+										list.add(valueString.trim());
+									}
+								}
 							}
-							bin = Bin.asList(binColumn.getBinNameHeader(), list);
+							bin = new Bin(binColumn.getBinNameHeader(), list);
 						} else {
 							bin = null;
 							log.error("Error: Cannot parse to a list: "	+ binRawText);
@@ -333,7 +341,7 @@ public class AsWriterTask implements Callable<Integer> {
 								Date formatDate = format.parse(binRawText);
 								long miliSecondForDate = formatDate.getTime()
 										- timeZoneOffset;
-								
+
 								if(binColumn.getEncoding().contains(".SSS") && binColumn.binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)){
 									//We need time in miliseconds so no need to change it to seconds
 								} else {
@@ -403,19 +411,19 @@ public class AsWriterTask implements Callable<Integer> {
 	}
 
 	public byte[] toByteArray(String s) {
-		
+
 		if ((s.length() % 2) != 0) {
 			log.error("blob exception: " + s);
 			throw new IllegalArgumentException("Input hex formated string must contain an even number of characters");
 		}
-	
+
 		int len = s.length();
 		byte[] data = new byte[len / 2];
-		
+
 		try {
 			for (int i = 0; i < len; i += 2) {
 				data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-	                             + Character.digit(s.charAt(i+1), 16));
+						+ Character.digit(s.charAt(i+1), 16));
 			}
 		} catch (Exception e) {
 			log.error("blob exception:" + e);
@@ -425,14 +433,14 @@ public class AsWriterTask implements Callable<Integer> {
 
 	public Integer call() throws Exception {
 		boolean processLine = false;
-		
+
 		try {
 			processLine = processLine();
 		} catch (Exception e) {
 			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Parsing Error" + e);
 			log.debug(e);
 		}
-		
+
 		//If processLine() succeeds, write to aerospike
 		if (processLine) {
 			return writeToAs();

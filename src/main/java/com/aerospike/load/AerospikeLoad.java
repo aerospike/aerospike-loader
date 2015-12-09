@@ -45,6 +45,7 @@ import org.apache.log4j.Logger;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
+import com.aerospike.client.Value;
 /**
  * This is the main class for the Aerospike import. 
  * 
@@ -90,6 +91,8 @@ public class AerospikeLoad implements Runnable {
 	private static Logger	log = Logger.getLogger(AerospikeLoad.class);
 	
 	public static void main(String[] args) throws IOException{
+		
+		Value.UseDoubleType = true;
 
 		Thread statPrinter = new Thread(new PrintStat(counters));
 		try {
