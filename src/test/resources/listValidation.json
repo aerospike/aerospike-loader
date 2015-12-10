@@ -1,7 +1,7 @@
 {
 	"version" : "1.0",
 	"input_type" : "csv",
-	"csv_style": { "delimiter": "," , "n_columns_datafile": 3, "ignore_first_line": true }
+	"csv_style": { "delimiter": "," , "n_columns_datafile": 5, "ignore_first_line": true },
 
 	"key": {"column_name":"key", "type": "String"},
 
@@ -10,8 +10,15 @@
   
 	"binlist": [  
 
-    	{"name": "listprog",
-     	"value": {"column_name": "listprog", "type" : "list"}
-    	}
+    	{"name": "segments",
+     	"value": {"column_name": "segments", "type" : "list"}
+    	},
+    	{"name": "l-segments",
+     	"value": {"column_name": "l-segments", "type" : "llist"}
+    	},
+	    {
+	      "name":"name",
+	      "value": {"column_name": "name", "type" : "string"}
+	    }
 	]
 }

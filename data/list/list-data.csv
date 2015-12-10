@@ -1,0 +1,5 @@
+set,key,name,segments,l-segments
+list,user-1,bob,23::18::96::200,23::18::96::200
+list,user-2,mary,2::18::92::100,2::18::92::100
+list,user-3,sue,3::17::95::200,3::17::95::200
+list,user-4,jim,213::180::6::20,213::180::6::20

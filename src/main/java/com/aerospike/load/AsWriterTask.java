@@ -43,6 +43,7 @@ import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.ResultCode;
+import com.aerospike.client.large.LargeList;
 import com.aerospike.client.policy.WritePolicy;
 
 public class AsWriterTask implements Callable<Integer> {
@@ -247,6 +248,27 @@ public class AsWriterTask implements Callable<Integer> {
 						}
 
 						break;
+					case LLIST:
+						/*
+						 * Assumptions
+						 * 1. Items are separated by a colon ','
+						 * 2. Item value will be a string
+						 * 3. List will be in double quotes
+						 * 
+						 * No support for nested maps or nested lists
+						 * 
+						 */
+
+						List<Object> list = createList(binRawText);
+						if (list.size() > 0) {
+							String listBin = binColumn.getBinNameHeader();
+							LargeList llist = this.client.getLargeList(null, key, listBin);
+							llist.add(list);
+						} else {
+							log.error("Error: Cannot parse to a llist: "	+ binRawText);
+						}
+						bin = null;
+						break;
 					case LIST:
 						/*
 						 * Assumptions
@@ -258,25 +280,8 @@ public class AsWriterTask implements Callable<Integer> {
 						 * 
 						 */
 
-						String[] listValues = binRawText.split(Constants.LIST_DELEMITER, -1);
-						if (listValues.length > 0) {
-							List<Object> list = new ArrayList<Object>();
-							for (String valueString : listValues) {
-								/* 
-								 * guess the type
-								 */
-								try {
-									Double val = Double.parseDouble(valueString.trim());
-									list.add(val);
-								} catch (NumberFormatException e){
-									try {
-										Long val = Long.parseLong(valueString.trim());
-										list.add(val);
-									} catch (NumberFormatException ee){
-										list.add(valueString.trim());
-									}
-								}
-							}
+						list = createList(binRawText);
+						if (list.size() > 0){
 							bin = new Bin(binColumn.getBinNameHeader(), list);
 						} else {
 							bin = null;
@@ -373,7 +378,7 @@ public class AsWriterTask implements Callable<Integer> {
 			lineProcessed = true;
 			log.trace("Formed key and bins for line " + lineNumber + " Key: " + this.key.userKey + " Bins:" + this.bins.toString());
 		} catch (AerospikeException ae) {
-			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Aerospike Bin processing Error:" + ae.getResultCode());
+			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Aerospike Bin processing Error:" + ae.getMessage() + " ResultCode: " + ae.getResultCode());
 			if(log.isDebugEnabled()){
 				ae.printStackTrace();
 			}
@@ -408,6 +413,29 @@ public class AsWriterTask implements Callable<Integer> {
 		}
 
 		return lineProcessed;
+	}
+
+	private List<Object> createList(String values){
+		List<Object> list = new ArrayList<Object>();
+		String[] listValues = values.split(Constants.LIST_DELEMITER, -1);
+
+		for (String valueString : listValues) {
+			/* 
+			 * guess the type
+			 */
+			try {
+				Double val = Double.parseDouble(valueString.trim());
+				list.add(val);
+			} catch (NumberFormatException e){
+				try {
+					Long val = Long.parseLong(valueString.trim());
+					list.add(val);
+				} catch (NumberFormatException ee){
+					list.add(valueString.trim());
+				}
+			}
+		}
+		return list;
 	}
 
 	public byte[] toByteArray(String s) {

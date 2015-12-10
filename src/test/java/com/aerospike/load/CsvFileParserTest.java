@@ -24,6 +24,7 @@ import java.util.Random;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,10 +59,7 @@ public class CsvFileParserTest {
 	String log = "aerospike-load.log";
 	AerospikeClient client;
 	
-
-	 @Before
-	 public void setUp() {
-
+	public CsvFileParserTest(){
 		 try {
 			client = new AerospikeClient(host, Integer.parseInt(port));
 		} catch (NumberFormatException e) {
@@ -69,11 +67,21 @@ public class CsvFileParserTest {
 		} catch (AerospikeException e) {
 			e.printStackTrace();
 		}
+
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		client.close();
+	}
+	 @Before
+	 public void setUp() {
+
 	 }
 	 
 	 @After
 	 public void tearDown() {
-		 client.close();
+		 
 	 }
 
 	//String type data validation
@@ -229,33 +237,28 @@ public class CsvFileParserTest {
 	}
 
 	//List type data validation
-	//@Test
+	@Test
 	public void testValidateList() throws Exception {
 		System.out.println("TestValidateList: start");
 		if(!client.isConnected()) {
-			System.out.println("Client is not able to connect:" + host + ":" + port);
-			return;
+			Assert.fail("Client is not able to connect:" + host + ":" + port);
 		}
 
-		HashMap<String, String> binMap = new HashMap<String, String>();
-		binMap.put("key", "string");
-		binMap.put("set", "String");
-		binMap.put("listprog", "list");
-		String dstType = "list";
 
-		//set%5, range=10, seed= 20	, nrecords= 100
-		int setMod = 5, range = 100, seed = 10, nrecords = 10;
-		String filename = dataFile;
-		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
+		String filename = "data/list/list-data.csv";
+		
+		this.client.delete(null, new Key("test", "list", "user-1"));
+		this.client.delete(null, new Key("test", "list", "user-2"));
+		this.client.delete(null, new Key("test", "list", "user-3"));
+		this.client.delete(null, new Key("test", "list", "user-4"));
 
-		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/listValidation.json", dataFile});
-
-		boolean dataValid = validateMap(client, filename, nrecords, setMod, range, seed, binMap, dstType);
-		boolean error = getError(log);
-
-		assertTrue(dataValid);
-		assertTrue(!error);
-
+		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/listValidation.json", filename});
+		
+		Key key = new Key("test", "list", "user-1");
+		Record record = this.client.get(null, key);
+		Assert.assertEquals("bob", record.getString("name"));
+		Assert.assertTrue(record.getValue("segments") instanceof List);
+		Assert.assertNotNull("Bin is not a Large List", this.client.getLargeList(null, key, "l-segments"));
 		System.out.println("TestValidateList: Complete");
 	}
 

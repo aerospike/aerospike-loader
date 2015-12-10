@@ -27,14 +27,14 @@ package com.aerospike.load;
  *
  */
 enum SrcColumnType {
-	INTEGER, STRING, BLOB, LIST, MAP, JSON, TIMESTAMP, FLOAT;
+	INTEGER, STRING, BLOB, LIST, MAP, JSON, TIMESTAMP, FLOAT, LLIST;
 }
 /**
  * List of datatypes supported by Aerospike
  *
  */
 enum DstColumnType {
-	INTEGER, STRING, BLOB, LIST, MAP;
+	INTEGER, STRING, BLOB, LIST, MAP, FLOAT, LLIST;
 }
 /**
  * Column Definition class for data file.
@@ -52,6 +52,7 @@ public class ColumnDefinition {
 	int binValuePos;
 	String columnName;
 	String jsonPath;
+	
 	
 	public ColumnDefinition(
 			String binNameHeader,
@@ -117,6 +118,8 @@ public class ColumnDefinition {
 			this.srcType = SrcColumnType.BLOB;
 		} else if ("list".equalsIgnoreCase(type)){
 			this.srcType = SrcColumnType.LIST;
+		} else if ("llist".equalsIgnoreCase(type)){
+			this.srcType = SrcColumnType.LLIST;
 		} else if ("map".equalsIgnoreCase(type)){
 			this.srcType = SrcColumnType.MAP;
 		} else if ("json".equalsIgnoreCase(type)){
@@ -139,6 +142,10 @@ public class ColumnDefinition {
 			this.dstType = DstColumnType.LIST;
 		} else if ("map".equalsIgnoreCase(type)){
 			this.dstType = DstColumnType.MAP;
+		} else if ("llist".equalsIgnoreCase(type)){
+			this.dstType = DstColumnType.LLIST;
+		} else if ("float".equalsIgnoreCase(type)){
+			this.dstType = DstColumnType.FLOAT;
 		}
 	}
 	
