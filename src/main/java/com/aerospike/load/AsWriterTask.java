@@ -312,7 +312,7 @@ public class AsWriterTask implements Callable<Integer> {
 									map.put(kv[0].trim(), kv[1].trim());
 							}
 							log.debug(map.toString());
-							bin = Bin.asMap(binColumn.getBinNameHeader(), map);
+							bin = new Bin(binColumn.getBinNameHeader(), map);
 						} else {
 							bin = null;
 							log.error("Error: Cannot parse to a map: "
@@ -328,11 +328,11 @@ public class AsWriterTask implements Callable<Integer> {
 							Object obj = jsonParser.parse(binRawText);
 							if (obj instanceof JSONArray) {
 								JSONArray jsonArray = (JSONArray) obj;
-								bin = Bin.asList(binColumn.getBinNameHeader(),
+								bin = new Bin(binColumn.getBinNameHeader(),
 										jsonArray);
 							} else {
 								JSONObject jsonObj = (JSONObject) obj;
-								bin = Bin.asMap(binColumn.getBinNameHeader(),
+								bin = new Bin(binColumn.getBinNameHeader(),
 										jsonObj);
 							}
 						} catch (ParseException e) {
