@@ -231,7 +231,7 @@ public class AsWriterTask implements Callable<Integer> {
 						break;
 					case FLOAT:
 						try {
-							Double binDouble = Double.parseDouble(binRawText);
+							double binDouble = Double.parseDouble(binRawText);
 							bin = new Bin(binColumn.getBinNameHeader(), binDouble);
 						} catch (Exception e) {
 							log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Floating number Parse Error:" + e);
