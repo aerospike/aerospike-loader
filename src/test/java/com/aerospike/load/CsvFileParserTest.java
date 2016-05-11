@@ -36,7 +36,7 @@ import com.aerospike.client.Record;
 import com.aerospike.client.policy.Policy;
 
 enum BinType {
-	INTEGER, STRING, BLOB, LIST, MAP, JSON, TIMESTAMP;
+	INTEGER, STRING, BLOB, LIST, MAP, JSON, TIMESTAMP, FLOAT;
 }
 
 
@@ -142,6 +142,36 @@ public class CsvFileParserTest {
 		assertTrue(!error);
 		
 		System.out.println("TestValidateInteger: Complete");
+	}
+
+	//Blob type data validation
+	@Test
+	public void testValidateDouble() throws Exception {
+		System.out.println("TestValidateDouble: start");
+		if(!client.isConnected()) {
+			System.out.println("Client is not able to connect:" + host + ":" + port);
+			return;
+		}
+		
+		HashMap<String, String> binMap = new HashMap<String, String>();
+		binMap.put("key", "string");
+		binMap.put("set", "String");
+		binMap.put("percentage", "float");
+		String dstType = null;
+
+		int setMod = 5, range = 100, seed = 10, nrecords = 10;
+		String filename = dataFile;
+		writeDataMap(filename, nrecords, setMod, range, seed, binMap);
+		
+		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action,"-c", "src/test/resources/doubleValidation.json", dataFile});
+		
+		boolean dataValid = validateMap(client, filename, nrecords, setMod, range, seed, binMap, dstType);
+		boolean error = getError(log);
+		
+		assertTrue(dataValid);
+		assertTrue(!error);
+		
+		System.out.println("TestValidateDouble: Complete");
 	}
 
 	//Utf8 string type data validation
@@ -587,13 +617,16 @@ public class CsvFileParserTest {
 	public String getValue(String binName, String binType, int i) {
 
 		String value = null;
-		
+
 		switch(getBinType(binType.toLowerCase())){
 		case BLOB:
 			value = convertStringToHex(String.format("%s%d",binName, i));
 			break;
 		case INTEGER:
 			value = String.format("%d", i);
+			break;
+		case FLOAT:
+			value = String.format("%.1f", (double) i);
 			break;
 		case JSON:
 			JSONParser jsonParser = new JSONParser();
@@ -647,6 +680,8 @@ public class CsvFileParserTest {
 			return BinType.JSON;
 		} else if ("timestamp".equalsIgnoreCase(type)){
 			return BinType.TIMESTAMP;
+		}else if ("float".equalsIgnoreCase(type)){
+			return BinType.FLOAT;
 		}
 		return null;
 	}

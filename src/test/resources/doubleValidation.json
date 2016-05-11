@@ -1,0 +1,16 @@
+{
+	"version" : "1.0",
+	"input_type" : "csv",
+	"csv_style": { "delimiter": "," , "n_columns_datafile": 3, "ignore_first_line": true },
+
+	"key": {"column_name":"key", "type": "String"},
+
+	"set": {"column_name":"set" },
+
+  
+	"binlist": [  
+	    {"name": "percentage",
+		"value": {"column_name": "percentage", "type" : "float"}
+		}
+	]
+}
