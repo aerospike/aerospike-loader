@@ -1,0 +1,45 @@
+{
+  "version" : "2.0",
+  "dsv_config": { "delimiter": "#~#" , "n_columns_datafile": 6, "header_exist": true},
+  "mappings": [
+  	{
+	 	"key": {"column_name":"key", "type": "integer"},
+	  	"set": { "column_name":"set" , "type": "string"},
+	  	"bin_list": [  
+			{"name": "age",
+	     	"value": {"column_name": "age", "type" : "integer", "dst_type": "cdt_list"}
+	    	},
+	    	{"name": "name",
+	     	"value": {"column_name": "name", "type" : "String", "dst_type": "cdt_list"}
+	    	},
+	    	{"name": "locblob",
+	     	"value": {"column_name": "locblob", "type" : "blob", "dst_type" : "blob" , "encoding":"hex"}
+	    	},
+	    	{"name": "dob",
+	     	"value": {"column_name": "dob", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
+	    	}
+	  	]
+  	},
+	{	
+		"seceondry_mapping" : "true",
+    	"key": {"column_name":"name", "type": "String"},
+        "set": "name_map",
+	 	"bin_list": [
+	 		{"name": "key1",
+             "value": {"column_name": "key", "type" : "integer"}
+         	}
+         ]
+	},
+	{
+		"seceondry_mapping" : "true",
+		"key": {"column_name":"age", "type": "integer"},
+     	"set": "age_map",
+	  	"bin_list": [
+	  		{"name": "key2",
+             "value": {"column_name": "key", "type" : "integer"}
+       		}
+       	]
+	}
+  ]
+
+}

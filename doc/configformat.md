@@ -3,48 +3,80 @@
 
 - [Sample Config](#config)
 - [Keywords Supported](#keyword)
-  - [csv_style attributes](#csv_style)
+  - [dsv_config attributes](#dsv_config)
+  - [mappings attributes](#mappings)
   - [key/set attribute](#key/set)
   - [binlist attributes](#binlist)
 
 <a name="config"></a>
 ## Sample configuration file:
-Following config file maps data file having 4 columns. First line of data file contains column names which we can use for mapping or we can use column_position for mapping. This config file defines key and set mapping from 2nd and 4th column respectively. Two bins are mapped named bin1 from column position 3 and bin2 from column name last-visited.
+Following config file maps data file having five columns. If first line of data file contains column_names than given column_names can be used for mapping. If column_positions is given than data position can be obtained while processing data file. This config file defines dsv_config and mappings. dsv_config would have delimiter, n_columns_datafile, header_exist info. There are two types of mapping (Primary_mapping, secondary_mapping used for any column to key reverse indexing). Each mapping should have three fields (key, set, binlist). Here for eg. primary mapping has a key (having column_name 'key'), set (having column_name set) and binlist having definition for three bins.
 ``` c
 {
-  "version" : "1.0",
-  "input_type": "csv",
-  "csv_style": {
-    "delimiter": ",",
-    "n_columns_datafile": 4,
-    "ignore_first_line": true
-  },
-  "key": {
-    "column_position": 2,
-    "type": "string"
-  },
-  "set": {
-    "column_position": 4
-  },
-  "binlist": [
-    {
-      "name": "bin1",
-      "value": {
-        "column_position": 3,
-        "type": "timestamp",
-        "dst_type": "integer",
-        "encoding" : "MM/dd/yyyy"
-      }
+    "version" : "2.0",
+    "dsv_config": {
+        "delimiter": ",",
+        "n_columns_datafile": 5,
+        "header_exist": true
     },
-    {
-      "name": "bin2",
-      "value": {
-        "column_name": "last_visited",
-        "type": "blob",
-        "encoding" : "hex"
-      }
-    }
-  ]
+
+    "mappings" [
+        {
+            "key": {
+                "column_name": "key",
+                "type": "string"
+            },
+            "set": {
+                "column_name": "set"
+                "type": "string"
+            },
+            "binlist": [
+                {
+                    "name": "dob",
+                    "value": {
+                        "column_position": 3,
+                        "type": "timestamp",
+                        "dst_type": "integer",
+                        "encoding" : "MM/dd/yyyy"
+                    }
+                },
+                {
+                    "name": "lstblob",
+                    "value": {
+                        "column_name": "lstblob",
+                        "type": "blob",
+                        "encoding" : "hex"
+                    }
+                },
+                {
+                    "name": "age",
+                    "value": {
+                        "column_name": "name",
+                        "type": "name",
+                        "dst_type": "string",
+                    }
+                }
+            ]
+        },
+        {
+            "secondary_mapping": "true",
+            "key": {
+                "column_name": "name",
+                "type": "String"
+            },
+            "set": "name_map",
+            "binlist": [
+                {
+                    "name": "name_key",
+                    "value": {
+                        "column_name": "key",
+                        "type": "integer",
+                        "dst_type": "cdt_list"
+                    }
+                }
+            ]
+        }
+    ]
 }
 
 ```
@@ -52,41 +84,52 @@ Following config file maps data file having 4 columns. First line of data file c
 <a name="keyword"></a>
 ## Keywords Supported in Config file:
 
-| Keywords   | Description                                                                                                  | Required/ Optional                     | Value                    | Attributes                                                                |
-|------------|--------------------------------------------------------------------------------------------------------------|----------------------------------------|--------------------------|---------------------------------------------------------------------------|
-| version    | Version of Aerospike loader. Current version is 1.0                                                          | Required                               | "1.0"                    | No attributes                                                             |
-| input_type | input_type is to specify the format of data file. Currently only "csv" is supported.                         | Required                               | "csv"                    | No attributes                                                             |
-| csv_style  | csv_style is used for csv formatted data.                                                                    | Required ( only if input_style is csv) | list of attribute values | delimiter, n_columns_datafile, ignore_first_line                          |
-| key        | Key mapping from data file.                                                                                  | Required                               | list of attribute values | choice( column_position, column_name), type                               |
-| set        | Set name mapping from data file. Set name can be provided from command line or static value in config file. Set name is always string type. | Optional                               | list of attribute values | choice( column_position, column_name)                                     |
-| binlist    |  List of bin mapping  from data file.                                                                        | Required                               | Array of lists           | No direct attributes. Each list in array has two attributes: NAME, VALUE . |
+| Keywords   | Description                                                                                                  | Required/ Optional                      | Value                    | Attributes                                                                |
+|------------|--------------------------------------------------------------------------------------------------------------|-----------------------------------------|--------------------------|---------------------------------------------------------------------------|
+| version    | Version of Aerospike loader. Current version is 2.0                                                          | Required                                | "2.0"                    | No attributes                                                             |
+| dsv_config  | dsv_config is used for specifying configs.                                                                    | Required                                | Map of attribute values  | delimiter, n_columns_datafile, header_exist                          |
+| mappings   | List of mapping primary and secondary (secondary mapping is used to create a reverse mapping from secondary key. If there are columns other than Primary_key on which user want to create index.) | Required | List of mapping_def map | No direct attributes. Each map in array has four attributes: secondary_mapping (optional boolean. used to specify secondary_mapping), key (as above), set (as above), binlist (as above in binlist)
+| key (mappingDef attribute)       | Key mapping from data file.                                                                                  | Required                                | Map of attribute values  | choice( column_position/column_name), type                                |
+| set (mappingDef attribute)       | Set name mapping from data file. Set name can be provided as static value or dynamic (defined by mapping) in config file. Set name is always string type. | Required | Map of attribute values  | choice( column_position/column_name), type                               |
+| binlist (mappingDef attribute)   | List of bin mapping  from data file.                                                                         | Required                                | List of bin_def map      | No direct attributes. Each map in array has two attributes: name, value (column_position/column_name, type, dst_type, encoding). |
 
-<a name="csv_style"></a>
-### csv_style Attributes:
+<a name="dsv_config"></a>
+### dsv_config Attributes:
 
 | Keywords          	| Description                                                                                  	| Required/ Optional        	| Value                                                                        	|
 |-------------------	|----------------------------------------------------------------------------------------------	|---------------------------	|------------------------------------------------------------------------------	|
-| delimiter         	| delimiter is used to separate data in each row of data file.                                 	| Optional (default is ',') 	| any single character. Data part should not contain this delimiter character. 	|
-| columns           	| Number of columns in data file.                                                              	| Required                  	| Integer                                                                      	|
-| ignore_first_line 	| This attribute is used to skip first line of data file where header information is present.  	| Required                  	| "true","false".                                                              	|
+| delimiter         	| delimiter is used to separate data in each row of data file.                                 	| Optional (default is ',') 	| any string Data part should not contain this delimiter character. 	    |
+| n_columns_datafile           	| Number of columns in data file.                                                              	| Required                  	| Integer                                                                      	|
+| header_exist 	| This attribute is used to skip first line of data file where header information is present.  	| Required                  	| "true","false".                                                              	|
+
+<a name="mappings"></a>
+### mappings Attributes:
+mapping is list of primary or secondary mappingDefs. mapping has four attributes.
+- secondary_mapping (boolean optional)
+- key (map)
+- set (string or map)
+- binlist (list of bindefs.)
+
+__Note__: Definition is given below for all attributes.
 
 <a name="key/set"></a>
-### Key/Set Attributes: 
-Key is unique and always picked from data file. 
+### key/set Attributes: 
+key is unique and always picked from data file. 
 
 | Keywords                     | Description                                                                | Required/ Optional                             | Value           |
 |------------------------------|----------------------------------------------------------------------------|------------------------------------------------|-----------------|
-| column_position/ column_name | Column position number in data file or column name in header of data file. | Require one of column_position/ column_name. | integer/ string |
-| type                         | Type of key/set. Set name should be string.                                | Require                                  | string          |
+| column_position/ column_name | Column position number in data file or column name in header of data file. | Require one of column_position/ column_name.   | integer/ string |
+| type                         | Type of key/set. Set name should be string.                                | Require                                        | string          |
+
 <a name="binlist"></a>
 ### Binlist Attributes:
-"binlist" contains array of lists. So there is no direct attributes. Each list in binlist has two attributes one is "name"(name mapping for each bin) and other one is "value"(value mapping for each bin). In following table some sub attributes for "name/value" is described. "name" attribute doesn't have dst_type and encoding attribute, and type is string. "name/value" can have static/fixed values or we can pick name/value from data file. Length of each bin name should be less than or equal to 14.
+"binlist" contains array of lists. So there is no direct attributes. Each list in binlist has two attributes one is "name"(name mapping for each bin) and other one is "value"(value mapping for each bin). In following table some sub attributes for "name/value" is described. "name" attribute doesn't have dst_type and encoding attribute, and type is always string. "name/value" can have static/fixed values or we can pick name/value from data file. Length of each bin name should be less than or equal to 14.
 
 | Keywords                     | Description                                                                                                                                                                                    | Required/ Optional                                            | Value            |
 |------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|------------------|
 | column_position/ column_name | Column name in header of data file or column position.                                                                                                                                         | Require any one of column_position/ column_name               | integer / string |
 | type                         | Data type of source data. Supported data types are: integer, float, string, blob, timestamp.                                                                                                   | Require                                                       | string           |
-| dst_type                     | Source type data to aerospike type conversion. Supported data types are: integer, string, blob. Timestamp can be stored as integer/string, float is stored as 8 byte encoded byte array(blob). | Require if source type to destination type conversion needed. | string           |
-| encoding                     | Encoding format for data conversion from source to destination type. Blob type data  should be hex encoded. Timestamp type data can be encoded as "MM/DD/YYYY" if dst_type is integer.        | Require if dst_type is given                                  | string           |
+| dst_type                     | Source type data to aerospike type conversion. Supported data types are: integer, string, blob. Timestamp can be stored as integer/string, float is stored as 8 byte encoded byte array(blob). json (nested list, map can be passed.)| Require if source type to destination type conversion needed and for timestamp and blob case. | string           |
+| encoding                     | Encoding format for data conversion from source to destination type. Blob type data  should be hex encoded. Timestamp type data can be encoded as "MM/DD/YYYY" if dst_type is integer.         | Require if dst_type is given                                  | string           |
 
-   __Note:__ Specify column_name:"system_time" in config file to insert extra bin with system time of write for each record.
+   __Note:__ Specify column_name:"system_time" in config file to insert extra bin in each record with system time at the time of writing stored in it.

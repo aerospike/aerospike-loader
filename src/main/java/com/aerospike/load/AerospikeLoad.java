@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 by Aerospike.
+ * Copyright 2017 by Aerospike.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,6 +47,9 @@ import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.admin.Role;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.policy.ClientPolicy;
+import com.aerospike.client.policy.TlsPolicy;
+import com.aerospike.client.util.Util;
+
 /**
  * This is the main class for the Aerospike import. 
  * 
@@ -54,439 +57,619 @@ import com.aerospike.client.policy.ClientPolicy;
  * 
  * To run: java -jar aerospike-import-<version> <options> <file names>
  * The options are:
- * -c,--config <arg>   				Column definition file in JSON format
- * -ec,--abort-Error-Count<arg>		Abort when error occurs more than this value(default: 0(don't abort))
- * -h,--host <arg>      			Server hostname (default: localhost)
- * -n,--namespace <arg> 			Namespace (default: test)
+ * -h,--hosts <arg>      			List of seed hosts (default: localhost)
  * -p,--port <arg>      			Server port (default: 3000)
- * -s,--set <arg>       			Set name. (default: null)
- * -tt,--transaction-timeout <arg>	Transaction timeout in milliseconds for write (default: no timeout)
- * -et,--expiration-time <arg>		Time to expire of a record in seconds(default: never expire)
- * -T,--timezone <arg>				TimeZone of source where datadump is taken (default: local timeZone)
+ * -U,--user <arg>                  User name
+ * -P,--password <arg>              Password
+ * -n,--namespace <arg> 			Namespace (default: test)
+ * -c,--config <arg>   				Column definition file in JSON format
+ * -g,--max-throughput <arg>        Set a target transactions per second for the loader. The loader should not exceed this average throughput.
+ * -T,--transaction-timeout <arg>	Transaction timeout in milliseconds for write (default: no timeout)
+ * -e,--expiration-time <arg>		Time to expire of a record in seconds(default: never expire)
+ * -tz,--timezone <arg>				TimeZone of source where datadump is taken (default: local timeZone)
+ * -ec,--abort-Error-Count<arg>		Abort when error occurs more than this value(default: 0(don't abort))
+ * -wa,--write-Action <arg>			Write action if key already exists (default: update)
  * -u,--usage           			Print usage.
  * -v,--verbose						Verbose mode for debug logging (default: INFO)
- * -wa,--write-Action <arg>			Write action if key already exists (default: update)
- * -wt,--writerThreads<arg>			Number of writer threads (default: 5 * number of cores)
- * -rt,--readerThreads<arg>			Number of reader threads (default: 1 * number of cores)
+ * -tls,--tlsEnable                 Use TLS/SSL sockets(default: False)
+ * -tp,--tlsProtocols               Allow TLS protocols. Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
+ * -tlsCiphers,--tlsCipherSuite     Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
+ * -tr,--tlsRevoke                  Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
+ * -te,--tlsEncryptOnly             Enable TLS encryption and disable TLS certificate validation
  * 
  * The file names can be a series of file names or directories. 
  *
- * @author jyoti
+ * @author Aerospike
  *
  */
 public class AerospikeLoad implements Runnable {
 
 	private AerospikeClient 	client;
 	private String				fileName;
-
-	private static ExecutorService			writerPool;
-	private static int						nWriterThreads;
-	private static int						nReaderThreads;
-	private static int						rwThrottle;
-	private static final int				scaleFactor = 5;
-	private static List<ColumnDefinition>	metadataColumnDefs;
-	private static List<ColumnDefinition>	binColumnDefs;
-	private static HashMap<String, String>	metadataConfigs;
-	private static Parameters 				params;
-	private static Counter 	counters = new Counter();
-	private static Logger	log = Logger.getLogger(AerospikeLoad.class);
 	
-	public static void main(String[] args) throws IOException{
+	// Config related variable
+	private static ExecutorService	writerPool;
+	private static int				nWriterThreads;
+	private static int				nReaderThreads;
+	
+	private static final int		scaleFactor = 5;
+	private static String 			DEFAULT_DELIMITER = ",";
+	private static String 			DEFAULT_HEADER_EXIST = "false";
+	
+	// Other variables.
+	private static Parameters 		params;
+	private static Counter 			counters;
+	private static Thread 			statPrinter;
+	
+	// Data definition related variable
+	private static HashMap<String, String>	dsvConfigs;
+	private static List<MappingDefinition>	mappingDefs;
 
-		Thread statPrinter = new Thread(new PrintStat(counters));
+	private static Logger log = Logger.getLogger(AerospikeLoad.class);
+
+
+	public static void main(String[] args) throws IOException {
+		long processStart = System.currentTimeMillis();
+
+		AerospikeClient client = null;
+		counters = new Counter();
+		statPrinter = new Thread(new PrintStat(counters));
+		
 		try {
 			log.info("Aerospike loader started");
 			Options options = new Options();
-			options.addOption("h", "host", true, "Server hostname (default: localhost)");
+			options.addOption("h", "hosts", true,
+					"List of seed hosts in format:\n" +
+					"hostname1[:tlsname][:port1],...\n" +
+					"The tlsname is only used when connecting with a secure TLS enabled server. " +
+					"If the port is not specified, the default port is used.\n" +
+					"IPv6 addresses must be enclosed in square brackets.\n" +
+					"Default: localhost\n" + 
+					"Examples:\n" + 
+					"host1\n" + 
+					"host1:3000,host2:3000\n" + 
+					"192.168.1.10:cert1:3000,[2001::1111]:cert2:3000\n"
+					);
 			options.addOption("p", "port", true, "Server port (default: 3000)");
 			options.addOption("U", "user", true, "User name");
 			options.addOption("P", "password", true, "Password");
 			options.addOption("n", "namespace", true, "Namespace (default: test)");
-			options.addOption("s", "set", true, "Set name. (default: null)");
 			options.addOption("c", "config", true, "Column definition file name");
-			options.addOption("wt", "write-threads", true, "Number of writer threads (default: Number of cores * 5)");
-			options.addOption("rt", "read-threads", true, "Number of reader threads (default: Number of cores * 1)");
-			options.addOption("l", "rw-throttle", true, "Throttling of reader to writer(default: 10k) ");
-			options.addOption("tt", "transaction-timeout", true, "write transaction timeout in miliseconds(default: No timeout)");
-			options.addOption("et", "expiration-time", true, "Expiration time of records in seconds (default: never expire)");
-			options.addOption("T", "timezone", true, "Timezone of source where data dump is taken (default: local timezone)");
+			options.addOption("g", "max-throughput", true, "It limit numer of writes/sec in aerospike.");
+			options.addOption("T", "transaction-timeout", true, "write transaction timeout in milliseconds(default: No timeout)");
+			options.addOption("e", "expirationTime", true,
+					"Set expiration time of each record in seconds." +
+					" -1: Never expire, " +
+					"  0: Default to namespace," +
+					" >0: Actual given expiration time"
+					);
+			options.addOption("tz", "timezone", true, "Timezone of source where data dump is taken (default: local timezone)");
 			options.addOption("ec", "abort-error-count", true, "Error count to abort (default: 0)");
 			options.addOption("wa", "write-action", true, "Write action if key already exists (default: update)");
 			options.addOption("v", "verbose", false, "Logging all");
 			options.addOption("u", "usage", false, "Print usage.");
+			options.addOption("tls", "tlsEnable", false, "Use TLS/SSL sockets");
+			options.addOption("tp", "tlsProtocols", true, 
+					"Allow TLS protocols\n" +
+					"Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma\n" +
+					"Default: TLSv1.2"
+					);
+			options.addOption("tlsCiphers", "tlsCipherSuite", true, 
+					"Allow TLS cipher suites\n" +
+					"Values:  cipher names defined by JVM separated by comma\n" +
+					"Default: null (default cipher list provided by JVM)"
+					);
+			options.addOption("tr", "tlsRevoke", true, 
+					"Revoke certificates identified by their serial number\n" +
+					"Values:  serial numbers separated by comma\n" +
+					"Default: null (Do not revoke certificates)"
+					);
+			options.addOption("te", "tlsEncryptOnly", false, 
+					"Enable TLS encryption and disable TLS certificate validation"
+					);
 
 			CommandLineParser parser = new PosixParser();
 			CommandLine cl = parser.parse(options, args, false);
-
-			ClientPolicy clientPolicy = new ClientPolicy();
-			clientPolicy.user = cl.getOptionValue("user");
-			clientPolicy.password = cl.getOptionValue("password");
-		
-			if (clientPolicy.user != null && clientPolicy.password == null) {
-				java.io.Console console = System.console();
-			
-				if (console != null) {
-					char[] pass = console.readPassword("Enter password:");
-				
-					if (pass != null) {
-						clientPolicy.password = new String(pass);
-					}
-				}
-			}
-
+	        
 			if (args.length == 0 || cl.hasOption("u")) {
-				logUsage(options);
+				printUsage(options);
 				return;
 			}
 
-			if (cl.hasOption("l")){
-				rwThrottle = Integer.parseInt(cl.getOptionValue("l"));
-			} else {
-				rwThrottle = Constants.READLOAD;
-			}
-			// Get all command line options
+			// Create Abstract derived params from provided commandline params.
 			params = Utils.parseParameters(cl);
-
-			//Get client instance
-			AerospikeClient client = new AerospikeClient(clientPolicy, params.host, params.port);
-			if(!client.isConnected()) {
-				log.error("Client is not able to connect:" + params.host + ":" + params.port);
-				return;
-			}
-
-			//Check read-write role is given to user
-			if (!client.queryUser(null, clientPolicy.user).roles.contains(Role.ReadWrite)){
-				log.error("User role:" + client.queryUser(null, clientPolicy.user).roles.toString() + " Expected:" + Role.ReadWrite);
-				return;
-			}	
 			if (params.verbose) {
-				log.setLevel(Level.DEBUG);				
+				log.setLevel(Level.DEBUG);
+			}
+			
+			// Get and validate user roles for client.
+			client = getAerospikeClient(cl);
+			if (client == null) {
+				return;
+			}
+			
+			initReadWriteThreadCnt(cl);
+						
+			List<String> dataFileNames = new ArrayList<String>();
+			initDataFileNameList(cl, dataFileNames);
+			if (dataFileNames.size() == 0) {
+				return;
 			}
 
-			// Get available processors to calculate default number of threads
-			int cpus = Runtime.getRuntime().availableProcessors();
-			nWriterThreads = cpus * scaleFactor;
-			nReaderThreads = cpus;
-			
-			// Get writer thread count
-			if (cl.hasOption("wt")){
-				nWriterThreads = Integer.parseInt(cl.getOptionValue("wt"));
-				nWriterThreads = (nWriterThreads > 0 ? (nWriterThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS : nWriterThreads) : 1);
-				log.debug("Using writer Threads: " + nWriterThreads);
-			}
-			writerPool = Executors.newFixedThreadPool(nWriterThreads);
-			
-			// Get reader thread count
-			if (cl.hasOption("rt")){
-				nReaderThreads = Integer.parseInt(cl.getOptionValue("rt"));
-				nReaderThreads = (nReaderThreads > 0 ? (nReaderThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS :nReaderThreads) : 1);
-				log.debug("Using reader Threads: " + nReaderThreads);
-			}
-			
+			// Remove column definition file from list. if directory containing config file is passed.
 			String columnDefinitionFileName = cl.getOptionValue("c", null);
+			dataFileNames.remove(columnDefinitionFileName);
+			log.info("Number of data files:" + dataFileNames.size());
+			
+			initBytesToRead(dataFileNames);
 
-			log.debug("Column definition files/directory: " + columnDefinitionFileName);
-			if (columnDefinitionFileName == null){
-				log.error("Column definition files/directory not specified. use -c <file name>");
-				return;
-			}
+			// Perform main Read Write job.
+			runLoader(client, columnDefinitionFileName, dataFileNames);
 
-			File columnDefinitionFile = new File(columnDefinitionFileName);
-			if (!columnDefinitionFile.exists()){
-				log.error("Column definition files/directory does not exist: " + Utils.getFileName(columnDefinitionFileName));
-				return;
-			}
-						
-			// Get data file list
-			String[] files = cl.getArgs();
-			if(files.length == 0) {
-				log.error("No data file Specified: add <file/dir name> to end of the command ");
-				return;
-			}
-			List<String> allFileNames = new ArrayList<String>();
-			allFileNames = Utils.getFileNames(files);
-			if (allFileNames.size() == 0){
-				log.error("Given datafiles/directory does not exist");
-				return;
-			}
-			for (int i = 0; i < allFileNames.size(); i++) {
-				log.debug("File names:" + Utils.getFileName(allFileNames.get(i)));
-				File file = new File(allFileNames.get(i));
-				counters.write.recordTotal = counters.write.recordTotal + file.length();
-			}
-						
-			//remove column definition file from list
-			allFileNames.remove(columnDefinitionFileName);
-
-			log.info("Number of data files:" + allFileNames.size());
-
-			/**
-			 * Process column definition file to get meta data and bin mapping.
-			 */
-			metadataColumnDefs = new ArrayList<ColumnDefinition>();
-			binColumnDefs = new ArrayList<ColumnDefinition>();
-			metadataConfigs = new HashMap<String, String>();
-			
-			
-			if (Parser.processJSONColumnDefinitions(columnDefinitionFile, metadataConfigs, metadataColumnDefs, binColumnDefs, params)){
-				log.info("Config file processed.");
-			} else {
-				throw new Exception("Config file parsing Error");
-			}
-			
-			// Add metadata of config to parameters
-			String metadata;
-			if((metadata = metadataConfigs.get(Constants.INPUT_TYPE)) != null){
-				params.fileType = metadata;
-				if (params.fileType.equals(Constants.CSV_FILE)) {
-					
-					// Version check
-					metadata = metadataConfigs.get(Constants.VERSION);
-					String[] vNumber = metadata.split("\\.");
-					int v1 = Integer.parseInt(vNumber[0]);
-					int v2 = Integer.parseInt(vNumber[1]);
-					if((v1 <= Constants.MajorV) && (v2 <= Constants.MinorV)){
-						log.debug("Config version used:" + metadata);
-					} else 
-						throw new Exception("\"" + Constants.VERSION + ":" + metadata + "\" is not Supported");
-					
-					// Set delimiter 
-					if((metadata = metadataConfigs.get(Constants.DELIMITER)) != null && metadata.length() == 1){
-						params.delimiter = metadata.charAt(0);
-					} else {
-						log.warn("\"" + Constants.DELIMITER + ":" + metadata + "\" is not properly specified in config file. Default is ','");
-					}
-					
-					if((metadata = metadataConfigs.get(Constants.IGNORE_FIRST_LINE)) != null){
-						params.ignoreFirstLine = metadata.equals("true");
-					} else {
-						log.warn("\"" + Constants.IGNORE_FIRST_LINE + ":" + metadata + "\" is not properly specified in config file. Default is false");
-					}
-					
-					if((metadata = metadataConfigs.get(Constants.COLUMNS)) != null){
-						counters.write.colTotal = Integer.parseInt(metadata);
-					} else {
-						throw new Exception("\"" + Constants.COLUMNS + ":" + metadata + "\" is not properly specified in config file");
-					}
-				} else {
-					throw new Exception("\"" + params.fileType + "\" is not supported in config file");
-				}				
-			} else {
-				throw new Exception("\"" + Constants.INPUT_TYPE + "\" is not specified in config file");
-			}
-			
-			// add config input to column definitions
-			if(params.fileType.equals(Constants.CSV_FILE)){
-				List<String> binName = null;
-				if (params.ignoreFirstLine) {
-					String line;
-					BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(allFileNames.get(0)), "UTF8"));
-					if(( line = br.readLine()) != null) {
-						binName = Parser.getCSVRawColumns(line, params.delimiter);
-						br.close();	
-						if(binName.size() != counters.write.colTotal) {
-							throw new Exception("Number of column in config file and datafile are mismatch."
-								+ " Datafile: " + Utils.getFileName(allFileNames.get(0))
-								+ " Configfile: " + Utils.getFileName(columnDefinitionFileName));
-						}
-					}										
-				}
-
-				//update columndefs for metadata
-				for (int i = 0; i < metadataColumnDefs.size(); i++){
-					if(metadataColumnDefs.get(i).staticValue) {
-
-					}else {
-						if(metadataColumnDefs.get(i).binValuePos < 0) {
-							if(metadataColumnDefs.get(i).columnName == null){
-								if(metadataColumnDefs.get(i).jsonPath == null){
-									log.error("dynamic metadata having improper info" + metadataColumnDefs.toString()); //TODO
-								} else {
-									//TODO check for json_path	
-								}
-							} else {
-								if(params.ignoreFirstLine) {
-									if(binName.indexOf(metadataColumnDefs.get(i).binValueHeader) != -1){ 
-										metadataColumnDefs.get(i).binValuePos = binName.indexOf(metadataColumnDefs.get(i).binValueHeader);
-									} else {
-										throw new Exception("binName missing in data file:" + metadataColumnDefs.get(i).binValueHeader);
-									}
-								}
-							}
-						} else {
-							if(params.ignoreFirstLine)
-								metadataColumnDefs.get(i).binValueHeader = binName.get(metadataColumnDefs.get(i).binValuePos);
-						}
-					}
-					if((!metadataColumnDefs.get(i).staticValue) && (metadataColumnDefs.get(i).binValuePos < 0)) {
-						throw new Exception("Information for bin mapping is missing in config file:" + metadataColumnDefs.get(i));
-					}
-
-					if(metadataColumnDefs.get(i).srcType == null ) {
-						throw new Exception("Source data type is not properly mentioned:" + metadataColumnDefs.get(i));
-					}
-
-					if(metadataColumnDefs.get(i).binNameHeader == Constants.SET && !metadataColumnDefs.get(i).srcType.equals(SrcColumnType.STRING)){
-						throw new Exception("Set name should be string type:" + metadataColumnDefs.get(i));
-					}
-
-					if(metadataColumnDefs.get(i).binNameHeader.equalsIgnoreCase(Constants.SET) && params.set != null) {
-						throw new Exception("Set name is given both in config file and commandline. Provide only once.");
-					}
-				}
-
-				//update columndefs for bins
-				for (int i = 0; i < binColumnDefs.size(); i++){
-					if(binColumnDefs.get(i).staticName) {
-						
-					}else {
-						if(binColumnDefs.get(i).binNamePos < 0) {
-							if(binColumnDefs.get(i).columnName == null){
-								if(binColumnDefs.get(i).jsonPath == null){
-									log.error("dynamic bin having improper info"); //TODO
-								} else {
-									//TODO check for json_path
-								}
-							} else {
-								if(params.ignoreFirstLine) {
-									if(binName.indexOf(binColumnDefs.get(i).binNameHeader) != -1) {
-										binColumnDefs.get(i).binNamePos = binName.indexOf(binColumnDefs.get(i).binNameHeader);
-									} else {
-										throw new Exception("binName missing in data file:" + binColumnDefs.get(i).binNameHeader);
-									}
-								}
-							}
-						}else {
-							if(params.ignoreFirstLine)
-								binColumnDefs.get(i).binNameHeader = binName.get(binColumnDefs.get(i).binNamePos);
-						}
-					}
-					
-					
-					if(binColumnDefs.get(i).staticValue) {
-				
-					} else {
-						if(binColumnDefs.get(i).binValuePos < 0) {
-							if(binColumnDefs.get(i).columnName == null){
-								if(binColumnDefs.get(i).jsonPath == null){
-									log.error("dynamic bin having improper info"); //TODO
-								} else {
-									//TODO check for json_path
-								}
-							} else {
-								if(params.ignoreFirstLine) {
-									if(binName.contains(binColumnDefs.get(i).binValueHeader)){
-										binColumnDefs.get(i).binValuePos = binName.indexOf(binColumnDefs.get(i).binValueHeader);
-									} else if(!binColumnDefs.get(i).binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)) {
-										throw new Exception("Wrong column name mentioned in config file:" + binColumnDefs.get(i).binValueHeader);
-									}
-								}
-							}
-						}else {
-							if(params.ignoreFirstLine)
-								binColumnDefs.get(i).binValueHeader = binName.get(binColumnDefs.get(i).binValuePos);
-						}
-						
-						//check for missing entries in config file
-						if(binColumnDefs.get(i).binValuePos < 0 && binColumnDefs.get(i).binValueHeader == null) {
-							throw new Exception("Information missing(Value header or bin mapping) in config file:" + binColumnDefs.get(i));
-						}
-						
-						//check for proper data type in config file.
-						if(binColumnDefs.get(i).srcType == null ) {
-							throw new Exception("Source data type is not properly mentioned:" + binColumnDefs.get(i));
-						}
-						
-						//check for valid destination type
-						if((binColumnDefs.get(i).srcType.equals(SrcColumnType.TIMESTAMP) || binColumnDefs.get(i).srcType.equals(SrcColumnType.BLOB)) && binColumnDefs.get(i).dstType == null ) {
-							throw new Exception("Destination type is not mentioned: " + binColumnDefs.get(i));
-						}
-						
-						//check for encoding
-						if(binColumnDefs.get(i).dstType != null && binColumnDefs.get(i).encoding == null ) {
-							throw new Exception("Encoding is not given for src-dst type conversion:" + binColumnDefs.get(i));
-						}
-						
-						//check for valid encoding
-						if(binColumnDefs.get(i).srcType.equals(SrcColumnType.BLOB) && !binColumnDefs.get(i).encoding.equals(Constants.HEX_ENCODING)) {
-							throw new Exception("Wrong encoding for blob data:" + binColumnDefs.get(i));
-						}
-					}
-					
-					//Check static bin name mapped to dynamic bin value
-					if((binColumnDefs.get(i).binNamePos == binColumnDefs.get(i).binValuePos) && (binColumnDefs.get(i).binNamePos != -1)) {
-						throw new Exception("Static bin name mapped to dynamic bin value:" + binColumnDefs.get(i));
-					}
-					
-					//check for missing entries in config file
-					if(binColumnDefs.get(i).binNameHeader == null && binColumnDefs.get(i).binNameHeader.length() > Constants.BIN_NAME_LENGTH) {
-						throw new Exception("Information missing binName or large binName in config file:" + binColumnDefs.get(i));
-					}						
-				}
-			}
-			
-			log.info(params.toString());
-			log.debug("MetadataConfig:" + metadataColumnDefs);
-			log.debug("BinColumnDefs:" + binColumnDefs);
-			
-			// Start PrintStat thread
-			statPrinter.start();
-			
-			// Reader pool size
-			ExecutorService readerPool = Executors.newFixedThreadPool(nReaderThreads > allFileNames.size() ? allFileNames.size() : nReaderThreads);
-			log.info("Reader pool size : " + nReaderThreads);
-			
-			// Submit all tasks to writer threadpool.
-			for (String aFile : allFileNames){
-				log.debug("Submitting task for: " + aFile);
-				readerPool.submit(new AerospikeLoad(aFile, client, params));
-			}
-			
-			// Wait for reader pool to complete
-			readerPool.shutdown();
-			log.info("Shutdown down reader thread pool");
-			
-			while(!readerPool.isTerminated());
-			//readerPool.awaitTermination(20, TimeUnit.MINUTES);
-			log.info("Reader thread pool terminated");
-			
-			// Wait for writer pool to complete after getting all tasks from reader pool
-			writerPool.shutdown();
-			log.info("Shutdown down writer thread pool");
-			
-			while(!writerPool.isTerminated());
-			log.info("Writer thread pool terminated");
-
-			// Print final statistic of aerospike-loader.
-			log.info("Final Statistics of importer: (Succesfull Writes = " + counters.write.writeCount.get() + ", "
-					+ "Errors=" + (counters.write.writeErrors.get() + counters.write.readErrors.get() + counters.write.processingErrors.get()) 
-					+ "("+(counters.write.writeErrors.get()) + "-Write,"+ counters.write.readErrors.get()+ "-Read," + counters.write.processingErrors.get() +"-Processing)");
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			log.error(e);
-			if(log.isDebugEnabled()){
+			if (log.isDebugEnabled()) {
 				e.printStackTrace();
 			}
 		} finally {
 			// Stop statistic printer thread.
 			statPrinter.interrupt();
 			log.info("Aerospike loader completed");
+			if (client != null) {
+				client.close();
+			}
+		}
+
+		long processStop = System.currentTimeMillis();
+		log.info(String.format("Loader completed in %.3fsec", (float) (processStop - processStart) / 1000));
+	}
+	
+	private static AerospikeClient getAerospikeClient(CommandLine cl) {
+		ClientPolicy clientPolicy = new ClientPolicy();	
+		
+		initClientPolicy(cl, clientPolicy);
+		
+		AerospikeClient client = new AerospikeClient(clientPolicy, params.hosts);
+
+		if (!client.isConnected()) {
+			log.error("Client is not able to connect:" + params.hosts);
+			return null;
+		}
+		try {
+			// Check read-write role is given to user.
+			if (!client.queryUser(null, clientPolicy.user).roles.contains(Role.ReadWrite)) {
+				log.error("User role:" + client.queryUser(null, clientPolicy.user).roles.toString() + " Expected:" + Role.ReadWrite);
+				return null;
+			}
+		}
+		catch (AerospikeException e) {
+			// Ignore if security is not enabled.
+		}
+		return client;
+	}
+
+	private static void initClientPolicy(CommandLine cl, ClientPolicy clientPolicy) {
+		// Setting user, password in client policy.
+		clientPolicy.user = cl.getOptionValue("user");
+		clientPolicy.password = cl.getOptionValue("password");
+
+		if (clientPolicy.user != null && clientPolicy.password == null) {
+			java.io.Console console = System.console();
+			try {
+				if (console != null) {
+					char[] pass = console.readPassword("Enter password:");
+
+					if (pass != null) {
+						clientPolicy.password = new String(pass);
+					}
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		// Setting TLS in ClinetPolicy.
+		if (cl.hasOption("tls")) {
+			clientPolicy.tlsPolicy = new TlsPolicy();
+
+			if (cl.hasOption("tp")) {
+				String s = cl.getOptionValue("tp", "");
+				clientPolicy.tlsPolicy.protocols = s.split(",");
+			}
+
+			if (cl.hasOption("tlsCiphers")) {
+				String s = cl.getOptionValue("tlsCiphers", "");
+				clientPolicy.tlsPolicy.ciphers = s.split(",");
+			}
+
+			if (cl.hasOption("tr")) {
+				String s = cl.getOptionValue("tr", "");
+				clientPolicy.tlsPolicy.revokeCertificates = Util.toBigIntegerArray(s);
+			}
+
+			if (cl.hasOption("te")) {
+				clientPolicy.tlsPolicy.encryptOnly = true;
+			}
+		}
+	}
+	
+	private static void initReadWriteThreadCnt(CommandLine cl) {
+		// Get available processors to calculate default number of threads.
+		int cpus = Runtime.getRuntime().availableProcessors();
+		nWriterThreads = cpus * scaleFactor;
+		nReaderThreads = cpus;
+
+		nWriterThreads = (nWriterThreads > 0
+				? (nWriterThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS : nWriterThreads) : 1);
+		log.debug("Using writer Threads: " + nWriterThreads);
+
+		nReaderThreads = (nReaderThreads > 0
+				? (nReaderThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS : nReaderThreads) : 1);
+		log.debug("Using reader Threads: " + nReaderThreads);
+	}
+	
+	private static void initDataFileNameList(CommandLine cl, List<String> dataFileNames) {
+		// Get data file list.
+		String[] dataFiles = cl.getArgs();
+		
+		// Get data filename list.
+		if (dataFiles.length == 0) {
+			log.error("No data file Specified: add <file/dir name> to end of the command");
+			return;
+		}
+		
+		dataFileNames.addAll(Utils.getFileNames(dataFiles));
+		
+		if (dataFileNames.size() == 0) {
+			log.error("Given datafiles/directory does not exist Files: " + dataFileNames.toString());
+			return;
 		}
 	}
 
-	/*
-	 * Constructor
-	 */
-	public AerospikeLoad(String fileName, AerospikeClient client, Parameters params) throws AerospikeException{
-		this.client = client;
-		this.fileName = fileName; 
+	private static void initBytesToRead(List<String> dataFileNames) {
+		for (int i = 0; i < dataFileNames.size(); i++) {
+			log.debug("File names:" + Utils.getFileName(dataFileNames.get(i)));
+			File file = new File(dataFileNames.get(i));
+			counters.write.bytesTotal = counters.write.bytesTotal + file.length();
+		}
 	}
 
+	private static void runLoader(AerospikeClient client, String columnDefinitionFileName, List<String> dataFileNames) throws Exception {
+		/*
+		 * Process column definition file to get,
+		 * dsv_configs (delimiter, header_exist, n_column)
+		 * mapping definition(key, set, binlist)
+		 */
+		File columnDefinitionFile = getColumnDefinitionFile(columnDefinitionFileName);
+		
+		dsvConfigs = new HashMap<String, String>();
+		mappingDefs = new ArrayList<MappingDefinition>();
+		
+		Parser.setLogLevel(params.verbose);
+		if (Parser.parseJSONColumnDefinitions(columnDefinitionFile, dsvConfigs, mappingDefs)) {
+			log.info("Config file processed.");
+		} else {
+			throw new Exception("Config file parsing Error");
+		}
+
+		// Validate and set default DsvConfigs (from config/definition file).
+		validateAndSetDefaultDsvConfig();
+
+		// Parse datafile header line to get column names.
+		List <String> columnNames = parseColumnNames(columnDefinitionFileName, dataFileNames);
+
+		updateColumnInfoForMappingDefs(columnNames);
+
+		validateMappingDefs();
+
+		statPrinter.start();
+		
+		// writerPool is global as it will be used outside.
+		writerPool = Executors.newFixedThreadPool(nWriterThreads);
+
+		ExecutorService readerPool = Executors.newFixedThreadPool(nReaderThreads > dataFileNames.size()
+										? dataFileNames.size() : nReaderThreads);
+		log.info("Reader pool size : " + nReaderThreads);
+		
+		// Read write process start from this point.
+		counters.write.writeStartTime = System.currentTimeMillis();
+
+		// Submit all tasks to reader thread pool.
+		for (String aFile : dataFileNames) {
+			log.debug("Submitting task for: " + aFile);
+			readerPool.submit(new AerospikeLoad(aFile, client));
+		}
+		
+		// Wait for reader pool to complete.
+		readerPool.shutdown();
+		log.info("Shutdown reader thread pool");
+		
+		while(!readerPool.isTerminated());
+		log.info("Reader thread pool terminated");
+		
+		// Wait for writer pool to complete after getting all tasks from reader pool.
+		writerPool.shutdown();
+		log.info("Shutdown writer thread pool");
+		
+		while(!writerPool.isTerminated());
+		log.info("Writer thread pool terminated");
+
+		// Print final statistic of aerospike-loader.
+		log.info("Final Statistics of importer: ("
+				+ "Records Read = " + counters.write.readCount.get() + ", "
+				+ "Succesfull Writes = " + counters.write.writeCount.get() + ", "
+				+ "Succesfull Primary Writes = " + (counters.write.writeCount.get() - counters.write.mappingWriteCount.get()) + ", "
+				+ "Succesfull Mapping Writes = " + counters.write.mappingWriteCount.get() + ", "
+				+ "Errors = " + (counters.write.writeErrors.get() + counters.write.readErrors.get() + counters.write.processingErrors.get())
+				+ "(" + (counters.write.writeErrors.get()) + "-Write," + counters.write.readErrors.get() + "-Read,"
+				+ counters.write.processingErrors.get() + "-Processing), " + "Skipped = "
+				+ (counters.write.keyNullSkipped.get() + counters.write.noBinsSkipped.get()) + "("
+				+ (counters.write.keyNullSkipped.get()) + "-NullKey," + counters.write.noBinsSkipped.get()
+				+ "-NoBins)");
+	}
+
+	private static File getColumnDefinitionFile(String columnDefinitionFileName) throws Exception {
+		log.debug("Column definition files/directory: " + columnDefinitionFileName);
+
+		if (columnDefinitionFileName == null) {
+			throw new Exception("Column definition files/directory not specified. use -c <file name>");
+		}
+
+		File columnDefinitionFile = new File(columnDefinitionFileName);
+		if (!columnDefinitionFile.exists()) {
+			throw new Exception("Column definition files/directory does not exist: "
+					+ Utils.getFileName(columnDefinitionFileName));
+		}
+		return columnDefinitionFile;
+	}
+
+	private static void validateAndSetDefaultDsvConfig() throws Exception {
+		// Version check.
+		String version = dsvConfigs.get(Constants.VERSION);
+		if (!isVersionSupported(version)) {
+			throw new Exception("\"" + Constants.VERSION + ":" + version + "\" is not Supported");
+		}
+
+		// Set default delimiter.
+		String delimiter = dsvConfigs.get(Constants.DELIMITER);
+		if (delimiter == null) {
+			log.warn("\"" + Constants.DELIMITER
+					+ "\" is not properly specified in config file. Default is ','");
+			dsvConfigs.put(Constants.DELIMITER, DEFAULT_DELIMITER);
+		}
+
+		// Set Default header exist.
+		String isHeaderExist = dsvConfigs.get(Constants.HEADER_EXIST);
+		if (isHeaderExist == null) {
+			log.warn("\"" + Constants.HEADER_EXIST
+					+ "\" is not properly specified in config file. Default is false");
+			dsvConfigs.put(Constants.HEADER_EXIST, DEFAULT_HEADER_EXIST);
+		}
+	}
+
+	private static boolean isVersionSupported(String version) {
+		// Version check
+		String[] vNumber = version.split("\\.");
+		int v1 = Integer.parseInt(vNumber[0]);
+		int v2 = Integer.parseInt(vNumber[1]);
+		if ((v1 <= Constants.MajorV) && (v2 <= Constants.MinorV)) {
+			log.debug("Config version used:" + version);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private static List<String> parseColumnNames(String columnDefinitionFileName, List<String> dataFileNames) throws Exception {
+
+		// Parse header line from data file to get Bin names.
+		List<String> columnNames = null;
+
+		if (dsvHasHeader()) {
+			String dataFileName = dataFileNames.get(0);
+			String line;
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dataFileName), "UTF8"));
+			if ((line = br.readLine()) != null) {
+				columnNames = Parser.getDSVRawColumns(line, dsvConfigs.get(Constants.DELIMITER));
+				br.close();
+			}
+			else{
+				br.close();
+				throw new Exception("Header line not found." + " Datafile: " + Utils.getFileName(dataFileName));
+			}
+		}
+
+		// Throw exception if n_column defined in columndef file doesn't match n_columns in datafile. 
+		if (columnNames != null && (columnNames.size() != Integer.parseInt(dsvConfigs.get(Constants.N_COLUMN)))) {
+			throw new Exception("Number of column in config file and datafile are mismatch." + " Datafile: "
+					+ Utils.getFileName(dataFileNames.get(0)) + " columns: " + columnNames.toString() + " Configfile: "
+					+ Utils.getFileName(columnDefinitionFileName) + " n_colums: " + Integer.parseInt(dsvConfigs.get(Constants.N_COLUMN)));
+		}
+		return columnNames;
+	}
+
+	private static void updateColumnInfo(ColumnDefinition columnDef, List<String> columnNames) throws Exception {
+
+		if (columnDef.columnPos < 0) {
+			if (columnDef.columnName == null) {
+				if (columnDef.jsonPath == null) {
+					throw new Exception("Improper column definition. Please mention column pos / column name or json path.");
+				} else {
+					throw new Exception("JSON path is not a supported feature.");
+				}
+			} else if (dsvHasHeader()) {
+				columnDef.columnPos = columnNames.indexOf(columnDef.columnName);
+
+				if (columnDef.columnPos == -1) {
+					throw new Exception("Missing column name " + columnDef.columnName + " in data file header.");
+				}
+			}
+		} 
+
+		if (dsvHasHeader()) {
+			columnDef.columnName = columnNames.get(columnDef.columnPos);
+		} else {
+			throw new Exception("Column position defined for data file without header !!");
+		}
+	}
+
+	private static void updateColumnInfoForMappingDefs(List<String> columnNames) throws Exception {
+
+		for (MappingDefinition mappingDef : mappingDefs) {
+
+			// KEY
+			if (mappingDef.keyColumnDef == null) {
+				throw new Exception ("Mapping definition without key mapping");	
+			}
+			updateColumnInfo(mappingDef.keyColumnDef.nameDef, columnNames);
+
+			// SET
+			if (mappingDef.setColumnDef.staticName == null) {
+				if (mappingDef.setColumnDef.nameDef != null) {
+					updateColumnInfo(mappingDef.setColumnDef.nameDef, columnNames);
+				} else {
+					throw new Exception("Set Not defined in mapping definition. null set not allowed !!");
+				}
+			}
+
+			// BINS
+			for (BinDefinition binColumnDef : mappingDef.binColumnDefs) {
+
+				// BIN NAME
+				if (binColumnDef.staticName == null) {
+					if (binColumnDef.nameDef != null) {
+						updateColumnInfo(binColumnDef.nameDef, columnNames);
+					} else {
+						throw new Exception("Mapping Definition with missing bin Name definition");
+					}
+				}
+
+				// BIN VALUE
+				if (binColumnDef.staticValue == null) {
+					if (binColumnDef.valueDef != null) {
+
+						// SYSTEM_TIME is reserved column value
+						if (binColumnDef.valueDef.columnName.toLowerCase().equals(Constants.SYSTEM_TIME)) {
+							continue;
+						}
+						updateColumnInfo(binColumnDef.valueDef, columnNames);
+					} else {
+						throw new Exception("Mapping Definition with missing bin value definition");
+					}
+				}
+			}
+			log.debug("MappingDef:" + mappingDef.toString());
+		}
+	}
+
+	private static void validateMappingDefs() throws Exception {
+
+		for (MappingDefinition mappingDef : mappingDefs) {
+			validateSetNameInfo(mappingDef.setColumnDef);
+
+			validateKeyNameInfo(mappingDef.keyColumnDef);
+
+			for (BinDefinition binColumnDef : mappingDef.binColumnDefs) {
+
+				validateBinColumnsNameInfo(binColumnDef);
+				validateBinColumnsValueInfo(binColumnDef);
+
+				// TODO - arguably not needed. Pretty arbitrary
+				if ((binColumnDef.nameDef.columnPos == binColumnDef.valueDef.columnPos)
+						&& (binColumnDef.nameDef.columnPos != -1)) {
+					throw new Exception("Dynamic Bin Name column info same as Dynamic bin Value" + binColumnDef);
+				}
+			}
+		}
+	}
+
+	private static void validateSetNameInfo(MetaDefinition metadataColDef) throws Exception {
+		
+		if ((metadataColDef.staticName != null && metadataColDef.staticName.length() > Constants.SET_NAME_LENGTH)) {
+			throw new Exception("Set name len exceed Allowd limit. SET_NAME_LEN_MAX: " + Constants.SET_NAME_LENGTH + "Given SetName: " + metadataColDef.staticName);
+		}
+		
+		if (metadataColDef.staticName != null) {
+			return;
+		}
+
+		if (metadataColDef.nameDef.columnPos < 0 && (metadataColDef.nameDef.columnName == null)) {
+			throw new Exception("Information missing(columnName, columnPos) in config file: " + metadataColDef);
+		}
+
+		if (metadataColDef.nameDef.srcType == null
+				|| !metadataColDef.nameDef.srcType.equals(SrcColumnType.STRING)) {
+			throw new Exception("Set name should be string type: " + metadataColDef);
+		}
+
+	}
+
+	private static void validateKeyNameInfo(MetaDefinition metadataColDef) throws Exception {
+		
+		if (metadataColDef.nameDef.columnPos < 0 && (metadataColDef.nameDef.columnName == null)) {
+			throw new Exception("Information missing(columnName, columnPos) in config file: " + metadataColDef);
+		}
+
+		if (metadataColDef.nameDef.srcType == null) {
+			throw new Exception("Source data type is not properly mentioned: " + metadataColDef);
+		}
+	}
+
+	private static void validateBinColumnsNameInfo(BinDefinition binColumnDef) throws Exception {
+		if ((binColumnDef.staticName != null && binColumnDef.staticName.length() > Constants.BIN_NAME_LENGTH)) {
+			throw new Exception("Bin name len exceed Allowd limit. BIN_NAME_LEN_MAX: " + Constants.BIN_NAME_LENGTH + "Given BinName: " + binColumnDef.staticName);
+		}
+		
+		if (binColumnDef.staticName != null) {
+			return;
+		}
+
+		if ((binColumnDef.nameDef.columnPos < 0) && binColumnDef.nameDef.columnName == null) {
+			throw new Exception("Information missing(columnName, columnPos) in config file: " + binColumnDef);
+		}
+	}
+
+	private static void validateBinColumnsValueInfo(BinDefinition binColumnDef) throws Exception {
+
+		if (binColumnDef.staticValue != null) {
+			return;
+		}
+
+		// check for missing entries in config file
+		if (binColumnDef.valueDef.columnPos < 0 && binColumnDef.valueDef.columnName == null) {
+			throw new Exception(
+					"Information missing(columnName, columnPos) in config file: " + binColumnDef);
+		}
+
+		// src_type is mandatory.
+		if (binColumnDef.valueDef.srcType == null) {
+			throw new Exception("Source data type is not properly mentioned:" + binColumnDef);
+		}
+
+		// TIMESTAMP, BLOB src_type needs a dst_type.
+		if ((binColumnDef.valueDef.srcType.equals(SrcColumnType.TIMESTAMP)
+					|| binColumnDef.valueDef.srcType.equals(SrcColumnType.BLOB))
+				&& binColumnDef.valueDef.dstType == null) {
+			throw new Exception("Destination type is not mentioned: " + binColumnDef);
+		}
+
+		// Encoding should be given if dst_type is given(not needed in dst_type CDT_LIST)
+		if (binColumnDef.valueDef.dstType != null
+				&& binColumnDef.valueDef.encoding == null) {
+			throw new Exception("Encoding is not given for src-dst type conversion:" + binColumnDef);
+		}
+
+		// BLOB dst_type needs HEX_ENCODING.
+		if (binColumnDef.valueDef.srcType.equals(SrcColumnType.BLOB)
+				&& !binColumnDef.valueDef.encoding.equals(Constants.HEX_ENCODING)) {
+			throw new Exception("Wrong encoding for blob data:" + binColumnDef);
+		}
+	}
 	
-	/**
-	 * Write usage to console.
+	/*
+	 * Write help/usage to console.
 	 */
-	private static void logUsage(Options options) {
+	private static void printUsage(Options options) {
 		HelpFormatter formatter = new HelpFormatter();
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
@@ -495,82 +678,96 @@ public class AerospikeLoad implements Runnable {
 		log.info(sw.toString());
 	}
 
-	/**
+	private static boolean dsvHasHeader() {
+		return Boolean.valueOf(dsvConfigs.get(Constants.HEADER_EXIST));
+	}
+
+	/*
+	 * Constructor
+	 */
+	public AerospikeLoad(String fileName, AerospikeClient client) throws AerospikeException {
+		this.client = client;
+		this.fileName = fileName;
+	}
+
+	/*
 	 * Process a single file
 	 */
 	private void processFile() {
 		int lineNumber = 0;
-		
+
 		log.trace("Hosts: " + this.client.getNodeNames());
 		long start = System.currentTimeMillis();
-		try{
+
+		try {
+
 			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(this.fileName), "UTF8"));
 			log.debug("Reading file:  " + Utils.getFileName(fileName));
-			while(br.ready())
-			{
+			boolean hasHeader = dsvHasHeader();
+
+			while (br.ready()) {
 				String line;
-				
-				//skip reading 1st line of data file
-				if (params.ignoreFirstLine){
-					lineNumber++;	
-					String metaColumn = br.readLine();
-					counters.write.recordTotal = counters.write.recordTotal - metaColumn.length();
-				}
-				AsWriterTask task = null;
-				while((line = br.readLine()) != null){
+
+				// Skip reading 1st line of data file
+				if (hasHeader) {
 					lineNumber++;
-					log.trace("Read line " + lineNumber + " from file " + Utils.getFileName(fileName));
-					
-					// Throttle the read to write ratio
-					while((counters.write.readCount.get() - (counters.write.writeCount.get() + counters.write.writeErrors.get())) > rwThrottle) {
+					String header = br.readLine();
+					counters.write.bytesTotal = counters.write.bytesTotal - header.length();
+				}
+
+				while ((line = br.readLine()) != null) {
+					lineNumber++;
+					log.trace("Read line " + lineNumber + " from file: " + Utils.getFileName(fileName));
+
+					// Throttle if read to write difference goes beyond given number.
+					while ((counters.write.processingQueued.get()
+							- counters.write.processingCount.get()) > Constants.RW_THROTTLE_LIMIT) {
 						Thread.sleep(20);
 					}
-					if(params.fileType.equalsIgnoreCase(Constants.CSV_FILE)){
-						//add 2 to handle different file size in different platform.
-						task = new AsWriterTask(fileName, lineNumber, (line.length() + 1), Parser.getCSVRawColumns(line, params.delimiter), metadataColumnDefs, binColumnDefs, this.client, params, counters);
-						counters.write.readerProcessed.incrementAndGet();
-					} else {
-						log.error("File format not supported");
+
+					List<String> columns = Parser.getDSVRawColumns(line, dsvConfigs.get(Constants.DELIMITER));
+
+					if (columns == null) {
+						continue;
 					}
-					log.trace("Submitting line " + lineNumber + " in file " + Utils.getFileName(fileName));
-					writerPool.submit(task);
+
+					for (MappingDefinition mappingDef : mappingDefs) {
+						counters.write.processingQueued.getAndIncrement();
+						writerPool.submit(new AsWriterTask(fileName, lineNumber, (line.length() + 1),  this.client, columns,
+								dsvConfigs, mappingDef, params, counters));
+					}
 					
+					log.trace("Submitting line " + lineNumber + " in file: " + Utils.getFileName(fileName));
 					counters.write.readCount.incrementAndGet();
 				}
 			}
-			
+
 			br.close();
-			
-		} catch (IOException e) {
-			counters.write.readErrors.incrementAndGet();
-			log.error("Error processing file: " + Utils.getFileName(fileName)+": Line: " + lineNumber);
-			if(log.isDebugEnabled()){
-				e.printStackTrace();
-			}
+
 		} catch (Exception e) {
-			counters.write.readErrors.incrementAndGet();
-			log.error("Error processing file: " + Utils.getFileName(fileName)+": Line: "+ lineNumber);
-			if(log.isDebugEnabled()){
+			log.error("Error processing file: " + Utils.getFileName(fileName) + ": Line: " + lineNumber);
+			if (log.isDebugEnabled()) {
 				e.printStackTrace();
 			}
-		} 
+			counters.write.readErrors.getAndIncrement();
+		}
+
 		long stop = System.currentTimeMillis();
-		log.info(String.format("Reader completed %d-lines in %.3fsec, From file: %s", 
-				lineNumber, (float)(stop-start)/1000, Utils.getFileName(fileName)));
+		log.info(String.format("Reader completed %d-lines in %.3fsec, From file: %s", lineNumber,
+				(float) (stop - start) / 1000, Utils.getFileName(fileName)));
 	}
 	
 	public void run() {
 		log.info("Processing: " + Utils.getFileName(fileName));
 
 		try {
-			log.trace("Processing File " + Utils.getFileName(fileName));
+			log.trace("Processing File: " + Utils.getFileName(fileName));
 			processFile();
 		} catch (Exception e) {
-			log.error("Cannot process file " + Utils.getFileName(fileName));
-			if(log.isDebugEnabled()){
+			log.error("Cannot process file: " + Utils.getFileName(fileName));
+			if (log.isDebugEnabled()) {
 				e.printStackTrace();
 			}
 		}
-
 	}
 }

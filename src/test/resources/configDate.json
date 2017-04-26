@@ -1,0 +1,26 @@
+{
+  	"version" : "2.0",
+  	"dsv_config": { "delimiter": "##" , "n_columns_datafile": 3, "header_exist": true},
+
+	"mappings": [
+		{
+			"key": {"column_name":"key", "type": "string"},
+
+  			"set": { "column_name":"set" , "type": "string"},
+
+  			"bin_list": [
+
+    			{
+    				"name": "dateDataBin",
+    				"value": {"column_name": "dateData", "type" : "timestamp",  "dst_type": "integer", "encoding":"MM/dd/yy"}
+    			},
+    			{
+    				"name": "timestamp",
+    				"value": {"column_name": "system_time", "type" : "timestamp",  "dst_type": "integer", "encoding":"MM/dd/yy"}
+    			}
+    		]
+    	}	
+    
+  	]
+
+}

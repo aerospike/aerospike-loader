@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 by Aerospike.
+ * Copyright 2017 by Aerospike.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,31 +40,36 @@ public class PrintStat implements Runnable{
 		this.counters = counters;
 	}
 
+	/**
+	 * Print write_count, TPS, errors(timeouts, keyExists, otherWrites, readErrors, processing),
+	 * skipped, noBins, progress of loading. 
+	 */
 	@Override
 	public void run() {
-		
+
 		int tps = 0;
 		int rtps = 0;
 		int nWrites = 0;
 		int nErrors = 0;
 		int nReader = 0;
 		int progress = 0;
-		while(!Thread.currentThread().isInterrupted()){
-			
-			if(log.isDebugEnabled()) {
+		while (!Thread.currentThread().isInterrupted()) {
+
+			if (log.isDebugEnabled()) {
 				Runtime runtime = Runtime.getRuntime();
-				int mb = 1024*1024;
-				log.debug("Used Memory:"
-	            + (runtime.totalMemory() - runtime.freeMemory()) / mb + " Free Memory:" + runtime.freeMemory()/mb + " Total Memory:" + runtime.totalMemory()/mb + " Max Memory:" + runtime.maxMemory()/mb );
+				int mb = 1024 * 1024;
+				log.debug("Used Memory: " + (runtime.totalMemory() - runtime.freeMemory()) / mb + " Free Memory: "
+						+ runtime.freeMemory() / mb + " Total Memory: " + runtime.totalMemory() / mb + " Max Memory: "
+						+ runtime.maxMemory() / mb);
 			}
 			// Get current time
 			long time = System.currentTimeMillis();
 			String date = SimpleDateFormat.format(new Date(time));
-			
+
 			// Calculate progress
-			if (counters.write.recordTotal != 0)
-			progress = (int) ((counters.write.recordProcessed.get()*100)/counters.write.recordTotal);
-			
+			if (counters.write.bytesTotal != 0)
+				progress = (int) ((counters.write.bytesProcessed.get() * 100) / counters.write.bytesTotal);
+
 			// Calculate transaction per second and store current count
 			tps = (	counters.write.writeCount.get() + 
 					counters.write.writeErrors.get() + 
@@ -77,8 +82,8 @@ public class PrintStat implements Runnable{
 					counters.write.readErrors.get() +
 					counters.write.processingErrors.get());
 			
-			rtps = counters.write.readerProcessed.get() - nReader;
-			nReader = counters.write.readerProcessed.get();
+			rtps = counters.write.readCount.get() - nReader;
+			nReader = counters.write.readCount.get();
 
 			log.debug(date.toString() + ": Read/process tps:" + rtps);
 			// Print stats
@@ -89,6 +94,7 @@ public class PrintStat implements Runnable{
 					" othersWrites:" + (counters.write.writeErrors.get() - counters.write.writeTimeouts.get()-counters.write.writeKeyExists.get() ) +  
 					" ReadErrors:" + counters.write.readErrors.get() +
 					" Processing:" + counters.write.processingErrors.get() + ")" +
+					" Skiped (NullKey:" + counters.write.keyNullSkipped.get() + " NoBins:" + counters.write.noBinsSkipped + ")" +
 					" Progress:" + progress + "%");
 			
 			// Wait for 1 second
@@ -99,6 +105,5 @@ public class PrintStat implements Runnable{
 			}
 		}
 	}
-	
-	
+
 }

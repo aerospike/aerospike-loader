@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 by Aerospike.
+ * Copyright 2017 by Aerospike.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,79 +22,56 @@
 package com.aerospike.load;
 
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.client.Host;
 
 /**
  * Configuration data.
  */
 public class Parameters {
-	String host;
-	int port;
+	Host[] hosts;
 	String namespace;
-	String set;
-	int ttl;
-	String fileType;
-	char delimiter;
-	long timeZoneOffset;
-	boolean ignoreFirstLine;
-	boolean verbose;
-	int abortErrorCount;
 	WritePolicy writePolicy;
+	long maxThroughput;
+	long timeZoneOffset;
+	int abortErrorCount;
+	boolean verbose;
 	
 	/**
 	 * Set parameters from commandline argument. 
-	 * @param host
-	 * @param port
+	 * @param hosts
 	 * @param namespace
-	 * @param set
-	 * @param ttl
-	 * @param fileType
-	 * @param delimiter
+	 * @param writePolicy
+	 * @param maxThroughput
 	 * @param timeZoneOffset
-	 * @param verbose
-	 * @param ignoreFirstLine
 	 * @param abortAtError
+	 * @param verbose
 	 */
 	protected Parameters(
-			String host,
-			int port,
+			Host[] hosts,
 			String namespace,
-			String set,
-			int ttl,
-			String fileType,
-			char delimiter,
+			WritePolicy writePolicy,
+			long maxThroughput,
 			long timeZoneOffset,
-			boolean ignoreFirstLine,
-			boolean verbose,
 			int abortErrorCount,
-			WritePolicy writePolicy
+			boolean verbose
 			) {
-		this.host = host;
-		this.port = port;
+		this.hosts = hosts;
 		this.namespace = namespace;
-		this.set = set;
-		this.ttl = ttl;
-		this.fileType = fileType;
-		this.delimiter = delimiter;
-		this.timeZoneOffset = timeZoneOffset;
-		this.ignoreFirstLine = ignoreFirstLine;
-		this.verbose = verbose;
-		this.abortErrorCount = abortErrorCount;
 		this.writePolicy = writePolicy;
+		this.maxThroughput = maxThroughput;
+		this.timeZoneOffset = timeZoneOffset;
+		this.abortErrorCount = abortErrorCount;
+		this.verbose = verbose;
 	}
 
 	@Override
 	public String toString() {
-		return "Parameters:[ host=" + host + 
-				", port=" + port + 
-				", ns=" + namespace + 
-				", set=" + set +
-				", ttl=" + ttl +
-				", timeout=" + writePolicy.timeout +
-				", write-action=" + writePolicy.recordExistsAction.toString() +
-				", fileType=" + fileType +
-				", delimiter=" + delimiter +
-				", timeZoneOffset=" + timeZoneOffset +
-				", ignoreFirstLine=" + ignoreFirstLine +
-				", abortErrorCount=" + abortErrorCount + "]";
+		return "Parameters:[ hosts=" + this.hosts + 
+				", ns=" + this.namespace + 
+				", timeout=" + this.writePolicy.timeout +
+				", maxThroughput=" + this.maxThroughput +
+				", write-action=" + this.writePolicy.recordExistsAction.toString() +
+				", timeZoneOffset=" + this.timeZoneOffset +
+				", abortErrorCount=" + this.abortErrorCount + "]";
 	}
 }

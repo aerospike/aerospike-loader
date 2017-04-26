@@ -1,0 +1,60 @@
+{
+	"delimiter" : "##",
+	"as_binname_suffix" : "Bin",
+	"test_integer" : {
+		"key" : "string",
+		"set" : "string",
+		"intData" : "integer"
+	},
+	"test_float" : {
+		"key" : "string",
+		"set" : "string",
+		"floatData" : "float"
+	},
+	"test_string" : {
+		"key" : "string",
+		"set" : "string",
+		"stringData" : "string"
+	},
+	"test_utf8" : {
+		"key" : "string",
+		"set" : "string",
+		"utf8Data" : "string"
+	},
+	"test_blob" : {
+		"key" : "string",
+		"set" : "string",
+		"blobData" : "blob"
+	},
+	"test_date" : {
+		"key" : "string",
+		"set" : "string",
+		"dateData" : "timestamp"
+	},
+	"test_list" : {
+		"key" : "string",
+		"set" : "string",
+		"listData" : "list"
+	},
+	"test_map" : {
+		"key" : "string",
+		"set" : "string",
+		"mapData" : "map"
+	},
+	"test_json" : {
+		"key" : "string",
+		"set" : "string",
+		"jsonData" : "json"
+	},
+	"test_alltype" : {
+		"key" : "string",
+		"set" : "string",
+		"intData" : "integer",
+		"floatData" : "float",
+		"stringData" : "string",
+		"blobData" : "blob",
+		"dateData" : "timestamp",
+		"listdata" : "list",
+		"mapData" : "list"
+	}
+}

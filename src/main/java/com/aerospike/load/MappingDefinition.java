@@ -19,46 +19,36 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  ******************************************************************************/
+
 package com.aerospike.load;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.List;
 
 /**
- * Counter class to keep track of statistic of Loader.
  * 
  * @author Aerospike
- *
+ * 
+ * MappinfDefinition (Key, Set, Bin definition) populated by parsing config file.
+ * 
  */
-public class Counter {
+public class MappingDefinition {
+	public boolean secondaryMapping = false;
+	public MetaDefinition keyColumnDef;
+	public MetaDefinition setColumnDef;
+	public List<BinDefinition> binColumnDefs;
 
-	public static class Current {
-		// Read from File
-		AtomicInteger readCount = new AtomicInteger();
-		AtomicInteger readErrors = new AtomicInteger();
-
-		// Queued for processing
-		AtomicInteger processingQueued = new AtomicInteger();
-		AtomicInteger processingCount = new AtomicInteger();
-		AtomicInteger processingErrors = new AtomicInteger();
-		
-		// Write to Aerospike
-		AtomicInteger writeCount = new AtomicInteger();
-		AtomicInteger mappingWriteCount = new AtomicInteger();
-		AtomicInteger writeErrors = new AtomicInteger();
-		AtomicInteger writeTimeouts = new AtomicInteger();
-		AtomicInteger writeKeyExists = new AtomicInteger();
-		AtomicInteger keyNullSkipped = new AtomicInteger();
-		AtomicInteger noBinsSkipped = new AtomicInteger();
-
-		// Write start time tracker
-		long writeStartTime;
-
-		// Progress tracker
-		long bytesTotal;
-		AtomicLong bytesProcessed = new AtomicLong();
+	public MappingDefinition(boolean secondary_mapping, MetaDefinition keyColumnDef, MetaDefinition setColumnDef, List<BinDefinition> binColumnDefs) {
+		super();
+		this.secondaryMapping = secondary_mapping;
+		this.keyColumnDef = keyColumnDef;
+		this.setColumnDef = setColumnDef;
+		this.binColumnDefs = binColumnDefs;
 	}
 
-	Current write = new Current();
-	static int numCol;
+	@Override
+	public String toString() {
+		return "MappingDefinition [secondary_mapping=" + this.secondaryMapping + " keyColumnDef=" + this.keyColumnDef
+				+ " setColumnDef=" + this.setColumnDef + "binColumnDefs=" + this.binColumnDefs + "]";
+	}
+
 }

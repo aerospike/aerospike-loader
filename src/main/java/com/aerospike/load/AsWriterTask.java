@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 by Aerospike.
+ * Copyright 2017 by Aerospike.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.log4j.Level;
@@ -44,400 +43,562 @@ import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
 import com.aerospike.client.ResultCode;
-import com.aerospike.client.policy.WritePolicy;
 
+/**
+ * 
+ * @author Aerospike
+ *
+ * Main writer class to write data in Aerospike.
+ * 
+ */
 public class AsWriterTask implements Callable<Integer> {
 
-	private AerospikeClient client;
-	private WritePolicy writePolicy;
-	private String nameSpace;
-	private String set;
-	private long timeZoneOffset; 
+	// File and line info variable.
 	private String fileName;
-	private int abortErrorCount;
-	
-	private Key key;
-	private List<Bin> bins;
-	private List<ColumnDefinition> metadataMapping = new ArrayList<ColumnDefinition>();
-	private List<ColumnDefinition> binMapping = new ArrayList<ColumnDefinition>();
-	private List<String> columns;
-	private Counter counters;
 	private int lineNumber;
 	private int lineSize;
+	
+	// Aerospike related variable.
+	private AerospikeClient client;
+	
+	// Data definition related variable
+	private HashMap<String, String>	dsvConfigs;
+	private MappingDefinition mappingDef;
+	private List<String> columns;
+
+	private Parameters params;
+	private Counter counters;
 	private JSONParser jsonParser;
 
 	private static Logger log = Logger.getLogger(AsWriterTask.class);
 
 	/**
-	 * AsWriterTask writes data into Aerospike server. In processLine() function using
-	 * column definition and each record in list format of bins it maps the bin name to
-	 * its value. After processing it writes the data to Aerospike server using writeToAS().
+	 * AsWriterTask process given data columns for a record and create Set and Key and Bins.
+	 * It writes these Bins to created Key. If its secondary mapping then it will do CDT append
+	 * over all created Bins.
 	 * 
-	 * @param fileName Name of the data file
+	 * @param fileName   Name of the data file
 	 * @param lineNumber Line number in the file fileName
-	 * @param lineSize Size of the line to keep track of record processed 
-	 * @param columns List of column separated entries in this lineNumber
-	 * @param metadataColumnDefs Column Definitions for special columns like key,set
-	 * @param binColumnDefs Column Definitions for bin columns
-	 * @param client Aerospike client
-	 * @param params User given parameters
-	 * @param counters Counter for stats
+	 * @param lineSize   Size of the line to keep track of record processed 
+	 * @param client     AerospikeClient object
+	 * @param columns    List of column separated entries in this lineNumber
+	 * @param dsvConfig  Map of DSV configurations
+	 * @param mappingDef MappingDefinition of a mapping from config file
+	 * @param params     User given parameters
+	 * @param counters   Counter for stats
+	 * 
 	 */
-	public AsWriterTask( String fileName, int lineNumber, int lineSize, List<String> columns, List<ColumnDefinition> metadataColumnDefs, List<ColumnDefinition> binColumnDefs, AerospikeClient client, Parameters params, Counter counters){
-		this.columns = columns;
-		this.client = client;
-		this.writePolicy = params.writePolicy;
-		this.writePolicy.expiration = params.ttl;
-		this.timeZoneOffset = params.timeZoneOffset;
-		this.nameSpace = params.namespace;
-		this.set = params.set;
-		this.metadataMapping = metadataColumnDefs;
-		this.binMapping = binColumnDefs;
-		this.counters = counters;
+	public AsWriterTask(String fileName, int lineNumber, int lineSize,AerospikeClient client, List<String> columns, 
+			HashMap<String, String> dsvConfigs, MappingDefinition mappingDef, Parameters params, Counter counters) {
+		
+		// Passed to print log error with filename, line number, increment byteprocessed.
 		this.fileName = fileName;
-		this.abortErrorCount = params.abortErrorCount;
 		this.lineNumber = lineNumber;
 		this.lineSize = lineSize;
-		if(params.verbose){
+		
+		this.client = client;
+
+		this.dsvConfigs = dsvConfigs;
+		this.mappingDef = mappingDef;
+		this.columns = columns;
+
+		this.params = params;
+		if (params.verbose) {
 			log.setLevel(Level.DEBUG);
 		}
+
+		this.counters = counters;
+
 	}
 
-	/**
-	 * writes a record to the Aerospike Cluster
-	 * @throws AerospikeException
+	/*
+	 * Writes a record to the Aerospike Cluster
 	 */
-	private int writeToAs() {
-		int value = 0;
-		long errorTotal = 0;
-		if (this.client != null){
-			try {
-				if(!bins.isEmpty()) {
-					this.client.put(this.writePolicy, this.key, this.bins.toArray(new Bin[bins.size()]));
-					counters.write.recordProcessed.addAndGet(this.lineSize);
-					counters.write.writeCount.getAndIncrement();
-					log.trace("Wrote line " + lineNumber + " Key: " + this.key.userKey + " to Aerospike");
-					value = 1;
-				} else {
-					log.trace("No bins to insert");
-				}
-			} catch (AerospikeException ae) {
-				log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + "Aerospike Write Error:" + ae.getResultCode());
-				if(log.isDebugEnabled()){
-					ae.printStackTrace();
-				}
-				counters.write.recordProcessed.addAndGet(this.lineSize);
-				counters.write.writeErrors.getAndIncrement();
-				errorTotal = (counters.write.readErrors.get() + counters.write.writeErrors.get() + counters.write.processingErrors.get());
-				
-				switch(ae.getResultCode()) {				
-				case ResultCode.TIMEOUT:
-					counters.write.writeTimeouts.getAndIncrement();
-					break ;				
-				case ResultCode.KEY_EXISTS_ERROR:
-					counters.write.writeKeyExists.getAndIncrement();
-					break ;					
-				default:					
-				}
-				if((this.abortErrorCount != 0 && this.abortErrorCount < errorTotal) ) {
-					System.exit(-1);
-				}
-			} catch (Exception e) {
-				log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Write Error:" + e);
-				if(log.isDebugEnabled()){
-					e.printStackTrace();
-				}
-				counters.write.recordProcessed.addAndGet(this.lineSize);
-				counters.write.writeErrors.getAndIncrement();
-				errorTotal = (counters.write.readErrors.get() + counters.write.writeErrors.get() + counters.write.processingErrors.get());
-				if(this.abortErrorCount != 0 && this.abortErrorCount < errorTotal) {
-					System.exit(-1);
-				}
-			}
-		} 
-		return value;
-	}
-	private boolean processLine() {
-		log.debug("processing  File:line " + Utils.getFileName(fileName) + this.lineNumber );
-		bins = new ArrayList<Bin>();
-		boolean lineProcessed = false;
-		long errorTotal = 0;
+	private void writeToAs(Key key, List<Bin> bins) {
+
 		try {
-			if(columns.size() != counters.write.colTotal) {
-				if (columns.size() < counters.write.colTotal)
-				{
-					log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Number of column mismatch:Columns in data file is less than number of column in config file.");
-				} else {
-					throw new ParseException(lineNumber);
+			// Connection could be broken at actual write time.
+			if (this.client == null) {
+				throw new Exception("Null Aerospike client !!");
+			}
+
+
+			if (bins.isEmpty()) {
+				counters.write.noBinsSkipped.getAndIncrement();
+				log.trace("No bins to insert");
+				return;
+			}
+			// All bins will have append operation if secondary mapping.
+			if (this.mappingDef.secondaryMapping) {
+				for (Bin b : bins) {
+					client.operate(this.params.writePolicy, key,
+							com.aerospike.client.cdt.ListOperation.append(b.name, b.value));
 				}
+				counters.write.mappingWriteCount.getAndIncrement();
+			} else {
+				this.client.put(this.params.writePolicy, key, bins.toArray(new Bin[bins.size()]));
+				counters.write.writeCount.getAndIncrement();
+				counters.write.bytesProcessed.addAndGet(this.lineSize);
 			}
 			
-			//retrieve set name first
-			for (ColumnDefinition metadataColumn : this.metadataMapping) {
-				if (metadataColumn.staticValue  && metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.SET)) {
-					this.set = metadataColumn.binValueHeader;
-				} else {
-					String metadataRawText = this.columns.get(metadataColumn.getBinValuePos());
-					if(metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.SET)){
-						if(this.set == null){
-							this.set = metadataRawText;
-						}
-					}
-				}
-			}
-			// use set name to create key
-			for(ColumnDefinition metadataColumn : this.metadataMapping){
-				if(metadataColumn.getBinNameHeader().equalsIgnoreCase(Constants.KEY)){
-					String metadataRawText = this.columns.get(metadataColumn.getBinValuePos());
-					if (metadataColumn.getSrcType() == SrcColumnType.INTEGER){
-						Long integer = Long.parseLong(metadataRawText); 
-						this.key = new Key(this.nameSpace, this.set, integer);
-					} else {
-						this.key = new Key(this.nameSpace, this.set, metadataRawText);
-					}					
-				}	
-			}
+			log.trace("Wrote line " + lineNumber + " Key: " + key.userKey + " to Aerospike.");
+
+		} catch (AerospikeException ae) {
+
+			handleAerospikeWriteError(ae);
+			checkAndAbort();	
+
+		} catch (Exception e) {
+
+			handleWriteError(e);
+			checkAndAbort();
+
+		}
+	}
+	
+	private void handleAerospikeWriteError(AerospikeException ae) {
+
+		log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber + "Aerospike Write Error: "
+				+ ae.getResultCode());
+
+		if (log.isDebugEnabled()) {
+			ae.printStackTrace();
+		}
+
+		switch (ae.getResultCode()) {
+
+			case ResultCode.TIMEOUT:
+				counters.write.writeTimeouts.getAndIncrement();
+				break;
+			case ResultCode.KEY_EXISTS_ERROR:
+				counters.write.writeKeyExists.getAndIncrement();
+				break;
+			default:
+				//..
+		}
+
+		if (!this.mappingDef.secondaryMapping) {
+			counters.write.bytesProcessed.addAndGet(this.lineSize);
+		}
+
+		counters.write.writeErrors.getAndIncrement();	
+	}
+
+	private void handleWriteError(Exception e) {
+		log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber + " Write Error: " + e);
+		if (log.isDebugEnabled()) {
+			e.printStackTrace();
+		}
+		if (!this.mappingDef.secondaryMapping) {
+			counters.write.bytesProcessed.addAndGet(this.lineSize);
+		}
+		counters.write.writeErrors.getAndIncrement();
+	}
+
+	private void checkAndAbort(){
+		long errorTotal;
+		errorTotal = (counters.write.readErrors.get() + counters.write.writeErrors.get()
+						+ counters.write.processingErrors.get());
+		if (this.params.abortErrorCount != 0 && this.params.abortErrorCount < errorTotal) {
+			System.exit(-1);
+		}
+	}
+
+	/*
+	 * Create Set and Key from provided data for given mappingDef.
+	 * Create Bin for given binList in mappingDef.
+	 */
+	private Key getKeyAndBinsFromDataline(List<Bin> bins) {
+		log.debug("processing  File: " + Utils.getFileName(fileName) + "line: " + this.lineNumber);
+		Key key = null;
+
+		try {
+
+			validateNColumnInDataline();
+
+			// Set couldn't be null here. Its been validated earlier.
+			String set = getSetName();
+
+			key = createRecordKey(this.params.namespace, set);
 			
-			for (ColumnDefinition binColumn : this.binMapping){
-				Bin bin = null;
-				
-				if (!binColumn.staticName) {
-					binColumn.binNameHeader = this.columns.get(binColumn.binNamePos);
+			populateAsBinFromColumnDef(bins);
+			
+			log.trace("Formed key and bins for line: " + lineNumber + " Key: " + key.userKey + " Bins: "
+					+ bins.toString());
+
+		} catch (AerospikeException ae) {
+
+			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber
+					+ " Aerospike Bin processing Error: " + ae.getResultCode());
+			handleProcessLineError(ae);
+
+		} catch (ParseException pe) {
+
+			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber + " Parsing Error: " + pe);
+			handleProcessLineError(pe);
+
+		} catch (Exception e) {
+
+			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber + " Unknown Error: " + e);
+			handleProcessLineError(e);
+
+		}
+		return key;
+	}
+
+	/*
+	 * Validate if number of column in data line are same as provided in config file.
+	 * Throw exception the more columns are present then given.
+	 */
+	private void validateNColumnInDataline() throws ParseException {
+		
+		// Throw exception if n_columns(datafile) are more than n_columns(configfile).
+		int n_column = Integer.parseInt(dsvConfigs.get(Constants.N_COLUMN));
+		if (columns.size() == n_column) {
+			return;
+		}
+		if (columns.size() < n_column) {
+			log.warn("File: " + Utils.getFileName(fileName) + " Line: " + lineNumber
+					+ " Number of column mismatch:Columns in data file is less than number of column in config file.");
+		} else {
+			throw new ParseException(lineNumber);
+		}
+	}
+	
+	private void handleProcessLineError(Exception e) {
+		if (log.isDebugEnabled()) {
+			e.printStackTrace();
+		}
+		counters.write.processingErrors.getAndIncrement();
+		counters.write.bytesProcessed.addAndGet(this.lineSize);
+		checkAndAbort();
+	}
+
+	
+	private String getSetName() {
+		MetaDefinition setColumn = this.mappingDef.setColumnDef;
+
+		if (setColumn.staticName != null) {
+			return setColumn.staticName;
+		}
+
+		String set = null;
+		String setRawText = this.columns.get(setColumn.nameDef.columnPos);
+		if (setColumn.nameDef.removePrefix != null) {
+			if (setRawText != null && setRawText.startsWith(setColumn.nameDef.removePrefix)) {
+				set = setRawText.substring(setColumn.nameDef.removePrefix.length());
+			}
+		} else {
+			set = setRawText;
+		}
+		return set;
+	}
+	
+	private Key createRecordKey(String namespace, String set) throws Exception {
+		// Use 'SET' name to create key.
+		Key key = null;
+
+		MetaDefinition keyColumn = this.mappingDef.keyColumnDef;
+		
+		String keyRawText = this.columns.get(keyColumn.nameDef.columnPos);
+		
+		if (keyRawText == null || keyRawText.trim().length() == 0) {
+			counters.write.keyNullSkipped.getAndIncrement();
+			throw new Exception("Key value is null in datafile.");
+		}
+
+		if ((keyColumn.nameDef.removePrefix != null)
+				&& (keyRawText.startsWith(keyColumn.nameDef.removePrefix))) {
+			keyRawText = keyRawText.substring(keyColumn.nameDef.removePrefix.length());
+		}
+
+		if (keyColumn.nameDef.srcType == SrcColumnType.INTEGER) {
+			Long integer = Long.parseLong(keyRawText);
+			key = new Key(namespace, set, integer);
+		} else {
+			key = new Key(namespace, set, keyRawText);
+		}
+
+		return key;
+	}
+	
+	private void populateAsBinFromColumnDef(List<Bin> bins) {
+		for (BinDefinition binColumn : this.mappingDef.binColumnDefs) {
+			Bin bin = null;
+			String binName = null;
+			String binRawValue = null;
+
+			// Get binName.
+			if (binColumn.staticName != null) {
+				binName = binColumn.staticName;
+			} else if (binColumn.nameDef != null) {
+				binName = this.columns.get(binColumn.nameDef.columnPos);
+			}
+
+			// Get BinValue.
+			if (binColumn.staticValue != null) {
+
+				binRawValue = binColumn.staticValue;
+				bin = new Bin(binName, binRawValue);
+
+			} else if (binColumn.valueDef != null) {
+
+				binRawValue = getbinRawValue(binColumn);
+				if (binRawValue == null || binRawValue.equals("")) {
+					continue;
 				}
 
-				if (!binColumn.staticValue) {
-					String binRawText = null;
-					if(binColumn.binValueHeader != null && binColumn.binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)){
-						SimpleDateFormat sdf = new SimpleDateFormat(binColumn.getEncoding());//dd/MM/yyyy
-						Date now = new Date();
-						binRawText = sdf.format(now);
-					}else{
-						binRawText = this.columns.get(binColumn.getBinValuePos());
-					}
+				switch (binColumn.valueDef.srcType) {
 
-					if(binRawText.equals("")) continue;
-
-					switch (binColumn.getSrcType()) {
 					case INTEGER:
-						//Server stores all integer type data in 64bit so use long
-						Long integer;
-						try {
-							integer = Long.parseLong(binRawText);
-							bin = new Bin(binColumn.getBinNameHeader(), integer);
-						} catch (Exception pi) {
-							log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Integer/Long Parse Error:" + pi);
-						}
-
+						bin = createBinForInteger(binName, binRawValue);
 						break;
 					case FLOAT:
-
-						/**
-						 * Floating type data can be stored as 8 byte byte array.
- 						 */
-						try {
-							float binfloat = Float.parseFloat(binRawText);
-							byte [] byteFloat = ByteBuffer.allocate(8).putFloat(binfloat).array();
-							bin = new Bin(binColumn.getBinNameHeader(), byteFloat);
-						} catch (Exception e) {
-							log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Floating number Parse Error:" + e);
-						}
+						bin = createBinForFloat(binName, binRawValue);
 						break;
 					case STRING:
-						bin = new Bin(binColumn.getBinNameHeader(), binRawText);
-						break;
-					case BLOB:
-						if (binColumn.getDstType().equals(DstColumnType.BLOB)){
-							if (binColumn.encoding.equalsIgnoreCase(Constants.HEX_ENCODING))
-								bin = new Bin(binColumn.getBinNameHeader(),
-										this.toByteArray(binRawText)); //TODO
-						}
-						
-						break;
-					case LIST:
-						/*
-						 * Assumptions
-						 * 1. Items are separated by a colon ','
-						 * 2. Item value will be a string
-						 * 3. List will be in double quotes
-						 * 
-						 * No support for nested maps or nested lists
-						 * 
-						 */
-						List<String> list = new ArrayList<String>();
-						String[] listValues = binRawText.split(Constants.LIST_DELEMITER, -1);
-						if (listValues.length > 0) {
-							for (String value : listValues) {
-								list.add(value.trim());
-							}
-							bin = Bin.asList(binColumn.getBinNameHeader(), list);
-						} else {
-							bin = null;
-							log.error("Error: Cannot parse to a list: "	+ binRawText);
-						}
-						break;
-					case MAP:
-						/*
-						 * Asumptions:
-						 * 1. Items are separated by a colon ','
-						 * 2. Name value pairs are separated by equals ':'
-						 * 3. Map key is a string
-						 * 4. Map value will be a string
-						 * 5. Map will be in double quotes
-						 * 
-						 * No support for nested maps or nested lists
-						 * 
-						 */
-						Map<String, Object> map = new HashMap<String, Object>();
-						String[] mapValues = binRawText.split(Constants.MAP_DELEMITER, -1);
-						if (mapValues.length > 0) {
-							for (String value : mapValues) {
-								String[] kv = value.split(Constants.MAPKEY_DELEMITER);
-								if (kv.length != 2)
-									log.error("Error: Cannot parse map <k,v> using: "
-											+ kv);
-								else
-									map.put(kv[0].trim(), kv[1].trim());
-							}
-							log.debug(map.toString());
-							bin = Bin.asMap(binColumn.getBinNameHeader(), map);
-						} else {
-							bin = null;
-							log.error("Error: Cannot parse to a map: "
-									+ binRawText);
-						}
+						bin = createBinForString(binName, binRawValue);
 						break;
 					case JSON:
-						try {
-							log.debug(binRawText);
-							if (jsonParser == null)
-								jsonParser = new JSONParser();
-
-							Object obj = jsonParser.parse(binRawText);
-							if (obj instanceof JSONArray) {
-								JSONArray jsonArray = (JSONArray) obj;
-								bin = Bin.asList(binColumn.getBinNameHeader(),
-										jsonArray);
-							} else {
-								JSONObject jsonObj = (JSONObject) obj;
-								bin = Bin.asMap(binColumn.getBinNameHeader(),
-										jsonObj);
-							}
-						} catch (ParseException e) {
-							log.error("Failed to parse JSON", e);
-						}
+						/*
+						 * JSON could take any valid JSON. There are two type of JSON:
+						 * JsonArray: this can be used to insert List (Any generic JSON list)
+						 * JsonObj: this can be used to insert Map (Any generic JSON object)
+						 */
+						bin = createBinForJson(binName, binRawValue);
+						break;
+					case BLOB:
+						bin = createBinForBlob(binColumn, binName, binRawValue);
 						break;
 					case TIMESTAMP:
-						if (binColumn.getDstType().equals(DstColumnType.INTEGER)){
-							DateFormat format = new SimpleDateFormat(binColumn.getEncoding());
-							try {
-								Date formatDate = format.parse(binRawText);
-								long miliSecondForDate = formatDate.getTime()
-										- timeZoneOffset;
-								
-								if(binColumn.getEncoding().contains(".SSS") && binColumn.binValueHeader.toLowerCase().equals(Constants.SYSTEM_TIME)){
-									//We need time in miliseconds so no need to change it to seconds
-								} else {
-									miliSecondForDate = miliSecondForDate/1000;
-								}
-								bin = new Bin(binColumn.getBinNameHeader(),
-										miliSecondForDate);
-								log.trace("Date format:" + binRawText
-										+ " in seconds:" + miliSecondForDate);
-							} catch (java.text.ParseException e) {
-								e.printStackTrace();
-							}
-						} else if (binColumn.getDstType().equals(DstColumnType.STRING)) {
-							bin = new Bin(binColumn.getBinNameHeader(), binRawText);
-						}
+						bin = createBinForTimestamp(binColumn, binName, binRawValue);
 						break;
-
 					default:
-
+						//....
 					}
-				} else {
-					bin = new Bin(binColumn.getBinNameHeader(), binColumn.getBinValueHeader());
-				}
+			}
 
-				if(bin != null){
-					bins.add(bin);
-				}
-			}
-			lineProcessed = true;
-			log.trace("Formed key and bins for line " + lineNumber + " Key: " + this.key.userKey + " Bins:" + this.bins.toString());
-		} catch (AerospikeException ae) {
-			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Aerospike Bin processing Error:" + ae.getResultCode());
-			if(log.isDebugEnabled()){
-				ae.printStackTrace();
-			}
-			counters.write.processingErrors.getAndIncrement();
-			counters.write.recordProcessed.addAndGet(this.lineSize);
-			errorTotal = (counters.write.readErrors.get() + counters.write.writeErrors.get() + counters.write.processingErrors.get());
-			if(this.abortErrorCount != 0 && this.abortErrorCount < errorTotal) {
-				System.exit(-1);
-			}
-		} catch (ParseException pe) {
-			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Parsing Error:" + pe);
-			if(log.isDebugEnabled()){
-				pe.printStackTrace();
-			}
-			counters.write.processingErrors.getAndIncrement();
-			counters.write.recordProcessed.addAndGet(this.lineSize);
-			errorTotal = (counters.write.readErrors.get() + counters.write.writeErrors.get() + counters.write.processingErrors.get());
-			if(this.abortErrorCount != 0 && this.abortErrorCount < errorTotal) {
-				System.exit(-1);
-			}
-		} catch (Exception e) {
-			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Unknown Error:" + e);
-			if(log.isDebugEnabled()){
-				e.printStackTrace();
-			}			
-			counters.write.processingErrors.getAndIncrement();
-			counters.write.recordProcessed.addAndGet(this.lineSize);
-			errorTotal = (counters.write.readErrors.get() + counters.write.writeErrors.get() + counters.write.processingErrors.get());
-			if(this.abortErrorCount != 0 && this.abortErrorCount < errorTotal) {
-				System.exit(-1);
+			if (bin != null) {	
+				bins.add(bin);
 			}
 		}
-
-		return lineProcessed;
 	}
 
-	public byte[] toByteArray(String s) {
-		
-		if ((s.length() % 2) != 0) {
-			log.error("blob exception: " + s);
-			throw new IllegalArgumentException("Input hex formated string must contain an even number of characters");
+	private String getbinRawValue(BinDefinition binColumn) {
+		/*
+		 * User may want to store the time when record is written in Aerospike.
+		 * Assign system_time to binvalue. This bin will be written as part of
+		 * record.
+		 */
+		if (binColumn.valueDef.columnName != null
+				&& binColumn.valueDef.columnName.toLowerCase().equals(Constants.SYSTEM_TIME)) {
+
+			SimpleDateFormat sdf =
+				new SimpleDateFormat(binColumn.valueDef.encoding);    // dd/MM/yyyy
+			Date now = new Date();
+			return sdf.format(now);
 		}
-	
-		int len = s.length();
-		byte[] data = new byte[len / 2];
+
 		
+		String binRawValue = this.columns.get(binColumn.valueDef.columnPos);
+
+		if ((binColumn.valueDef.removePrefix != null)
+				&& (binRawValue != null && binRawValue.startsWith(binColumn.valueDef.removePrefix))) {
+			binRawValue =
+				binRawValue.substring(binColumn.valueDef.removePrefix.length());
+		}
+		return binRawValue;
+	}
+	
+	private Bin createBinForInteger(String binName, String binRawValue) {
+
 		try {
-			for (int i = 0; i < len; i += 2) {
-				data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-	                             + Character.digit(s.charAt(i+1), 16));
+			// Server stores all integer type data in 64bit so use long.
+			Long integer = Long.parseLong(binRawValue);
+
+			return new Bin(binName, integer);
+
+		} catch (Exception pi) {
+
+			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber
+					+ " Integer/Long Parse Error: " + pi);
+			return null;
+
+		}
+	}
+
+	private Bin createBinForFloat(String binName, String binRawValue) {
+
+		try {
+			float binfloat = Float.parseFloat(binRawValue);
+
+			// Floating type data can be stored as 8 byte byte
+			byte[] byteFloat = ByteBuffer.allocate(8).putFloat(binfloat).array();
+
+			return new Bin(binName, byteFloat);
+
+		} catch (Exception e) {
+			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber
+					+ " Floating number Parse Error: " + e);
+			return null;
+		}
+
+	}
+
+	private Bin createBinForString(String binName, String binRawValue) {
+		return new Bin(binName, binRawValue);
+	}
+	
+	private Bin createBinForJson(String binName, String binRawValue) {
+
+		try {
+			log.debug(binRawValue);
+			/*
+			 * Python dump list as "['a', 'b', 'c']"
+			 * Python dump map as "{'a': 'b'}"
+			 * So adapting those convention and replacing (<'> to <">) for java support.
+			 */
+			binRawValue = binRawValue.replace('\'', '"');
+
+			if (jsonParser == null) {
+				jsonParser = new JSONParser();
+			}
+
+			Object obj = jsonParser.parse(binRawValue);
+
+			if (obj instanceof JSONArray) {
+				JSONArray jsonArray = (JSONArray) obj;
+				return new Bin(binName, jsonArray);
+			} else {
+				JSONObject jsonObj = (JSONObject) obj;
+				return  new Bin(binName, jsonObj);
+			}
+
+		} catch (ParseException e) {
+			log.error("Failed to parse JSON: " + e);
+			return null;
+		}
+
+	}
+
+	private Bin createBinForBlob(BinDefinition binColumn, String binName, String binRawValue) {
+		try {
+			if ((binColumn.valueDef.dstType.equals(DstColumnType.BLOB))
+					&& (binColumn.valueDef.encoding.equalsIgnoreCase(Constants.HEX_ENCODING))) {
+				return new Bin(binName, this.toByteArray(binRawValue));
 			}
 		} catch (Exception e) {
-			log.error("blob exception:" + e);
+			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber
+					+ " Blob Parse Error: " + e);
+			return null;
+		}
+
+		return null;
+	}
+
+	private Bin createBinForTimestamp(BinDefinition binColumn, String binName, String binRawValue) {
+
+		if (! binColumn.valueDef.dstType.equals(DstColumnType.INTEGER)) {
+			return new Bin(binName, binRawValue);
+		}
+
+		DateFormat format = new SimpleDateFormat(binColumn.valueDef.encoding);
+
+		try {
+
+			Date formatDate = format.parse(binRawValue);
+			long milliSecondForDate = formatDate.getTime() - this.params.timeZoneOffset;
+
+			if (!(binColumn.valueDef.encoding.contains(".SSS")
+					&& binName.equals(Constants.SYSTEM_TIME))) {
+				// We need time in milliseconds so no need to change it to milliseconds.
+				milliSecondForDate = milliSecondForDate / 1000;
+			}
+
+			log.trace("Date format: " + binRawValue + " in seconds: " + milliSecondForDate);
+
+			return new Bin(binName, milliSecondForDate);
+
+		} catch (java.text.ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+	}
+	
+	private byte[] toByteArray(String s) {
+
+		if ((s.length() % 2) != 0) {
+			log.error("blob exception: " + s);
+			throw new IllegalArgumentException("Input hex formated string must contain an even number of characters.");
+		}
+
+		int len = s.length();
+		byte[] data = new byte[len / 2];
+
+		try {
+			for (int i = 0; i < len; i += 2) {
+				data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
+			}
+		} catch (Exception e) {
+			log.error("blob exception: " + e);
 		}
 		return data;
 	}
 
+	private boolean exceedingThroughput() {
+		long transactions;
+		long timeLapse;
+		long throughput;
+
+		transactions = counters.write.writeCount.get()
+				+ counters.write.mappingWriteCount.get()
+				+ counters.write.writeErrors.get();
+
+		timeLapse = (counters.write.writeStartTime - System.currentTimeMillis()) / 1000L;
+
+		if (timeLapse > 0) {
+			throughput = transactions / timeLapse;
+
+			if (throughput > params.maxThroughput) {
+				return true;
+			}
+		}
+		return false;
+	}
 	public Integer call() throws Exception {
-		boolean processLine = false;
-		
+
+		List<Bin> bins = new ArrayList<Bin>();
+
+
 		try {
-			processLine = processLine();
+
+			counters.write.processingCount.getAndIncrement();
+
+			Key key = getKeyAndBinsFromDataline(bins);
+
+			if (key != null) {
+				writeToAs(key, bins);
+				bins.clear();
+
+				if (params.maxThroughput == 0) {
+					return 0;
+				}
+
+				while(exceedingThroughput()) {
+					Thread.sleep(20);
+				}
+
+				return 0;
+			}
+
 		} catch (Exception e) {
-			log.error("File:" + Utils.getFileName(this.fileName) + " Line:" + lineNumber + " Parsing Error" + e);
+
+			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber + " Parsing Error: " + e);
 			log.debug(e);
 		}
-		
-		//If processLine() succeeds, write to aerospike
-		if (processLine) {
-			return writeToAs();
-		} else {
-			return 0;
-		}
+
+		return 0;
+
 	}
 }

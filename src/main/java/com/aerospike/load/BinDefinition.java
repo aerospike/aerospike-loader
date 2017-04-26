@@ -21,44 +21,52 @@
  ******************************************************************************/
 package com.aerospike.load;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
- * Counter class to keep track of statistic of Loader.
  * 
  * @author Aerospike
- *
+ * 
+ * BinDefinition (BinName/Def, BinValu/Def) populated by parsing config file.
+ * 
  */
-public class Counter {
+public class BinDefinition {
 
-	public static class Current {
-		// Read from File
-		AtomicInteger readCount = new AtomicInteger();
-		AtomicInteger readErrors = new AtomicInteger();
+	String staticName;
+	String staticValue;
+	ColumnDefinition nameDef;
+	ColumnDefinition valueDef;
+	
+	public BinDefinition(
+			String staticName,
+			String staticValue,
+			ColumnDefinition nameDef,
+			ColumnDefinition valueDef
 
-		// Queued for processing
-		AtomicInteger processingQueued = new AtomicInteger();
-		AtomicInteger processingCount = new AtomicInteger();
-		AtomicInteger processingErrors = new AtomicInteger();
-		
-		// Write to Aerospike
-		AtomicInteger writeCount = new AtomicInteger();
-		AtomicInteger mappingWriteCount = new AtomicInteger();
-		AtomicInteger writeErrors = new AtomicInteger();
-		AtomicInteger writeTimeouts = new AtomicInteger();
-		AtomicInteger writeKeyExists = new AtomicInteger();
-		AtomicInteger keyNullSkipped = new AtomicInteger();
-		AtomicInteger noBinsSkipped = new AtomicInteger();
-
-		// Write start time tracker
-		long writeStartTime;
-
-		// Progress tracker
-		long bytesTotal;
-		AtomicLong bytesProcessed = new AtomicLong();
+	) {
+		this.staticName = staticName;
+		this.staticValue = staticValue;
+		this.nameDef = nameDef;
+		this.valueDef = valueDef;
 	}
 
-	Current write = new Current();
-	static int numCol;
+	public String getBinStaticName() {
+		return this.staticName;
+	}
+
+	public String getBinStaticValue() {
+		return this.staticValue;
+	}
+
+	public ColumnDefinition getBinNameDef() {
+		return this.nameDef;
+	}
+
+	public ColumnDefinition getValueDef() {
+		return this.valueDef;
+	}
+
+	@Override
+	public String toString() {
+		return "ColumnDefinition [staticName=" + this.staticName + ", staticValue=" + this.staticValue
+				+ ", nameDef=" + this.nameDef + ", valueDef=" + this.valueDef + "]";
+	}
 }

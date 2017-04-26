@@ -1,0 +1,22 @@
+{
+  "version" : "2.0",
+  "dsv_config": { "delimiter": "##" , "n_columns_datafile": 3, "header_exist": true},
+
+  "mappings": [
+	  {
+		  "key": {"column_name":"key", "type": "string"},
+		
+		  "set": { "column_name":"set" , "type": "string"},
+		
+		
+		  "bin_list": [
+		    {
+		    	"name": "mapDataBin",
+		     	"value": {"column_name": "mapData", "type" : "json"}
+		    }
+		    
+		  ]
+	  }
+  ]
+
+}

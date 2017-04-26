@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 by Aerospike.
+ * Copyright 2017 by Aerospike.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,48 +23,51 @@ package com.aerospike.load;
 
 /**
  * Constants used for this tool and keywords for Json config file.
- * @author jyoti
+ * @author Aerospike
  *
  */
 public class Constants {
 
+	// Config keywords
+	public static final String VERSION				= "version";
+	public static final String DSV_CONFIG			= "dsv_config";
+	public static final String DELIMITER			= "delimiter";
+	public static final String N_COLUMN				= "n_columns_datafile";
+	public static final String HEADER_EXIST	        = "header_exist";
+	
 	public static final String KEY					= "key";
 	public static final String SET					= "set";
-	public static final String CSV_FILE				= "csv";
+	public static final String BIN					= "bin";
+	public static final String MAPPINGS				= "mappings";
+	public static final String SECONDARY_MAPPING	= "secondary_mapping";
 	
-	public static final int BIN_NAME_LENGTH			= 14;
-	public static final int MAX_THREADS				= 128;
-	
-	public static final int READLOAD				= 10000;
-	
-	public static final char COMMA_DELEMITER		= ',';
-	public static final char DOUBLE_QOUTE_DELEMITER	= '"';
-	public static final String LIST_DELEMITER		= ",";
-	public static final String MAP_DELEMITER		= ",";
-	public static final String MAPKEY_DELEMITER		= "=";
-	//config keywords
-	public static final String VERSION				= "version";
-	public static final String INPUT_TYPE			= "input_type";
-	public static final String CSV_STYLE			= "csv_style";
-	public static final String DELIMITER			= "delimiter";
-	public static final String COLUMNS				= "n_columns_datafile";
-	public static final String IGNORE_FIRST_LINE	= "ignore_first_line";
-	
-	public static final String ABORT_AT_ERROR		= "abort_at_error";
-	public static final String BINLIST				= "binlist";
+	public static final String BINLIST				= "bin_list";
 	public static final String NAME					= "name";
 	public static final String VALUE				= "value";
 	public static final String COLUMN_POSITION		= "column_position";
 	public static final String COLUMN_NAME			= "column_name";
-	public static final String JSON_PATH			= "json_path";
 	public static final String TYPE					= "type";
 	public static final String DST_TYPE				= "dst_type";
 	public static final String ENCODING				= "encoding";
 	public static final String HEX_ENCODING			= "hex";
+	public static final String REMOVE_PREFIX		= "remove_prefix";
+	public static final String JSON_PATH			= "json_path";
+
+	// Constants
+	public static final int BIN_NAME_LENGTH			= 14;
+	public static final int SET_NAME_LENGTH			= 63;
+
+	public static final int MAX_THREADS				= 128;
 	
-	//keywords to insert extra information specified by user
+	public static final int RW_THROTTLE_LIMIT		= 10000;
+	public static final char DOUBLE_QUOTE_DELEMITER	= '"';
+
+	// keywords to insert extra information specified by user. Reserved
 	public static final String SYSTEM_TIME			= "system_time";
 
-	public static final int MajorV					= 1;
-	public static final int MinorV					= 1;
+	public static final String ABORT_AT_ERROR		= "abort_at_error";
+	public static final int MajorV					= 2;
+	public static final int MinorV					= 0;
+	
+	
 }

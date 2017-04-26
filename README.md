@@ -1,5 +1,5 @@
 #Aerospike Loader
-> Aerospike Loader parses a set of .CSV files and loads the data into Aerospike server.
+> Aerospike Loader parses a set of .DSV files and loads the data into Aerospike server.
 
 - [Features](doc/features.md)
 - [Prerequisites](#Prerequisites)
@@ -21,7 +21,7 @@
 
 <a name="Installation"></a>
 ## Installation
-* Source code is available on git-hub:
+* Source code is available on github:
 
         $ git clone git@github.com:aerospike/aerospike-loader.git
 
@@ -44,32 +44,38 @@ Following dependencies are downloaded automatically:
 Use **run_loader** script along with options and data files.  
     
         $ ./run_loader <options> <data file name(s)/directory>
+
 "data file name(s)/directory" can either be space delimited files or a directory name containing data files. See "Data Files" section for more details.
 
 __Options__:
 
 ``` java
--c,--config <arg>                Column definition file name
--ec,--abort-error-count <arg>    Error threshold to abort (default: 0)
--et,--expiration-time <arg>      Expiration time of records in seconds (default: never expire)
--h,--host <arg>                  Server hostname (default: localhost)
--n,--namespace <arg>             Namespace (default: test)
--p,--port <arg>                  Server port (default: 3000)
--rt,--read-threads <arg>         Number of read threads (default: Number of cores * 1)
--s,--set <arg>                   Set name. (default: null)
--T,--timezone <arg>              Time zone of data backup source (default: local timezone)
--tt,--transaction-timeout <arg>  Write transaction timeout in milliseconds(default: No timeout)
--u,--usage                       Print usage
--v,--verbose                     Detailed log
--wa,--write-action <arg>         Write action (default: update)
--wt,--write-threads <arg>        Number of write threads (default: Number of cores * 5)
+-h,--hosts <arg>      			List of seed hosts (default: localhost)
+-p,--port <arg>      			Server port (default: 3000)
+-U,--user <arg>                 User name
+-P,--password <arg>             Password
+-n,--namespace <arg> 			Namespace (default: test)
+-c,--config <arg>   			Column definition file in JSON format
+-g,--max-throughput <arg>       Set a target max transactions per second for the loader.
+-T,--transaction-timeout <arg>	Transaction timeout in milliseconds for write (default: no timeout)
+-e,--expiration-time <arg>		Time to expire of a record in seconds(default: never expire)
+-tz,--timezone <arg>			TimeZone of source where datadump is taken (default: local timeZone)
+-ec,--abort-Error-Count<arg>	Abort when error occurs more than this value(default: 0(don't abort))
+-wa,--write-Action <arg>		Write action if key already exists (default: update)
+-u,--usage           			Print usage.
+-v,--verbose					Verbose mode for debug logging (default: INFO)
+-tls,--tlsEnable                Use TLS/SSL sockets(default: False)
+-tp,--tlsProtocols              Allow TLS protocols. Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
+-tlsCiphers,--tlsCipherSuite    Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
+-tr,--tlsRevoke                 Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
+-te,--tlsEncryptOnly            Enable TLS encryption and disable TLS certificate validation
 ```
 
 For more details, refer to [Options](doc/options.md).
 
 ###Sample usage of all options:
 
-        $ ./run_loader -h nodex -p 3000 -n test -s demo -tt 3000 -et 3600 -et 2592000 -ec 100 -rt 4 -wt 20 -T PST -wa update -c ~/pathto/config.json datafiles/
+        $ ./run_loader -h nodex -p 3000 -n test -T 3000 -e 2592000 -ec 100 -tz PST -wa update -c ~/pathto/config.json datafiles/
 
 Where:
 
@@ -77,13 +83,10 @@ Where:
 Server IP:                                  nodex (-h)
 Port:                                       3000 (-p)
 Namespace:                                  test (-n) 
-Set:                                        demo (-s)
-Read Threads:                               4 (-rt)
-Write Threads:                              20 (-wt)
-Write Operation Timeout (in milliseconds):  3000 (-tt)
+Write Operation Timeout (in milliseconds):  3000 (-T)
 Write Error Threshold:                      100 (-ec)
-Record Expiration:                          2592000 (-et)
-Timezone:                                   PST (-T)
+Record Expiration:                          2592000 (-e)
+Timezone:                                   PST (-tz)
 Write Action:                               update (-wa) 
 Data Mapping:                               ~/pathto/config.json (-c)
 Data Files:                                 datafiles/

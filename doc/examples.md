@@ -1,8 +1,8 @@
 #Example
 
-Each example given below is for different use cases. To learn the usage quickly, just copy the data file content to data.csv, config file content to config.json and run the loader using following run command.
+Each example given below is for different use cases. To learn the usage quickly, just copy the data file content to data.dsv, config file content to config.json and run the loader using following run command.
 
-    ./run_loader -h localhost -c config.json data.csv
+    ./run_loader -h localhost -c config.json data.dsv
 
 - [With header in data file](#with header)
 - [Without header in data file](#without header)
@@ -12,56 +12,58 @@ Each example given below is for different use cases. To learn the usage quickly,
 
 <a name="with header"></a>
 ##__1. With header in data file__ : 
-Given below is an example of using datafile to write config file and usage of all supported data type formats. Referring data file we can create config file first. Data file may or may not contain column name as header information. If header information exists then it must present in first line of data file and we can use this header for column position mapping. Use of without header data file is given in next example.
+Given below is an example of using datafile to write config file and usage of all supported data type formats. Referring data file user can create config file first. Data file may or may not contain column name as header information. If header information exists then it must present in first line of data file and user can use this header for column position mapping. Use of without header data file is given in next example.
 
 ### Data file content:
-```CSV
-user_location,user_id,last_visited,set_name,age,user_name,user_name_blob,user_rating
-IND, userid1, 04/1/2014, facebook, 20, X20, 583230, 8.1
-USA, userid2, 03/18/2014, twitter, 27, X2, 5832, 6.4
-UK, userid3, 01/9/2014, twitter, 21, X3, 5833, 4.3
-UK, userid4, 01/2/2014, facebook, 16, X9, 5839, 5.9
-IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
+```DSV
+user_location##user_id##last_visited##set_name##age##user_name##user_name_blob##user_rating
+IND## userid1## 04/1/2014## facebook## 20## X20## 583230## 8.1
+USA## userid2## 03/18/2014## twitter## 27## X2## 5832## 6.4
+UK## userid3## 01/9/2014## twitter## 21## X3## 5833## 4.3
+UK## userid4## 01/2/2014## facebook## 16## X9## 5839## 5.9
+IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
 ```
 
 ### Config file content:
 ```JSON
 {
-  "version" : "1.0",
-  "input_type" : "csv",
-  "csv_style": { "delimiter": "," , "n_columns_datafile": 8, "ignore_first_line": true},
+  "version" : "2.0",
+  "dsv_config": { "delimiter": "," , "n_columns_datafile": 8, "header_exist": true},
 
-
-  "key": {"column_name":"user_id", "type": "string"},
-
-  "set": { "column_name":"set_name" , "type": "string"},
-
-  "binlist": [
-    {"name": "age",
-     "value": {"column_name": "age", "type" : "integer"}
-    },
-    {"name": "location",
-     "value": {"column_name": "user_location", "type" : "string"}
-    },
-    {"name": "name",
-     "value": {"column_name": "user_name", "type" : "String"}
-    },
-    {"name": "name_blob",
-     "value": {"column_name": "user_name_blob", "type" : "blob", "dst_type" : "blob" , "encoding":"hex"}
-    },
-    {"name": "recent_visit",
-     "value": {"column_name": "last_visited", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
-    },
-    {"name": "rating",
-     "value": {"column_name": "user_rating", "type" : "float"}
-    }
+  "mappings": [
+      {
+          "key": {"column_name":"user_id", "type": "string"},
+        
+          "set": { "column_name":"set_name" , "type": "string"},
+        
+          "binlist": [
+            {"name": "age",
+             "value": {"column_name": "age", "type" : "integer"}
+            },
+            {"name": "location",
+             "value": {"column_name": "user_location", "type" : "string"}
+            },
+            {"name": "name",
+             "value": {"column_name": "user_name", "type" : "String"}
+            },
+            {"name": "name_blob",
+             "value": {"column_name": "user_name_blob", "type" : "blob", "dst_type" : "blob", "encoding":"hex"}
+            },
+            {"name": "recent_visit",
+             "value": {"column_name": "last_visited", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
+            },
+            {"name": "rating",
+             "value": {"column_name": "user_rating", "type" : "float"}
+            }
+          ]
+      }
   ]
 }
 ```
 ### Explanation:
-- Specify delimiter(the way two bin values separated), n_columns_datafile(actual column count in data file), ignore_first_line(true if header or column names is mentioned in first line of datafile else false.)
+- Specify delimiter (the way two bin values separated), n_columns_datafile(actual column count in data file), header_exist (true if header or column names is mentioned in first line of datafile else false.)
 - Binlist contains array of bin mapping. In each bin mapping two entries are there, one is name which is used as bin name in aerospike and other one is value, which is the bin content mapping. If one column mapping is absent in config file then that column will be skipped while loading.
-- Instead of using column_name we can use column_position.
+- Instead of using column_name user can use column_position.
 - Native data types integer and string are stored as it is.
     - add following line to binlist in config file for __integer__ type data.
        - {"name": "age", "value": {  "column_name": "age", "type" : "integer"}}
@@ -90,88 +92,92 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
 Given below is an example of using datafile in which there is no header information in first line. When header information is not present in data file always use column_position for column mapping.
 
 ### Data file content:
-```CSV
-IND, userid1, 04/1/2014, facebook, 20, X20, 583230, 8.1
-USA, userid2, 03/18/2014, twitter, 27, X2, 5832, 6.4
-UK, userid3, 01/9/2014, twitter, 21, X3, 5833, 4.3
-UK, userid4, 01/2/2014, facebook, 16, X9, 5839, 5.9
-IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
+```DSV
+IND## userid1## 04/1/2014## facebook## 20## X20## 583230## 8.1
+USA## userid2## 03/18/2014## twitter## 27## X2## 5832## 6.4
+UK## userid3## 01/9/2014## twitter## 21## X3## 5833## 4.3
+UK## userid4## 01/2/2014## facebook## 16## X9## 5839## 5.9
+IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
 ```
 ### Config file content:
 ```JSON
 {
-  "version" : "1.0",
-  "input_type" : "csv",
-  "csv_style": { "delimiter": "," , "n_columns_datafile": 8, "ignore_first_line": false},
+  "version" : "2.0",
+  "dsv_config": { "delimiter": "," , "n_columns_datafile": 8, "header_exist": false},
 
-
-  "key": {"column_position":2, "type": "string"},
-
-  "set": { "column_position":4 , "type": "string"},
-
-  "binlist": [
-    {"name": "age",
-     "value": {"column_position": 5, "type" : "integer"}
-    },
-    {"name": "location",
-     "value": {"column_position": 1, "type" : "string"}
-    },
-    {"name": "name",
-     "value": {"column_position": 6, "type" : "String"}
-    },
-    {"name": "name_blob",
-     "value": {"column_position": 7, "type" : "blob", "dst_type" : "blob" , "encoding":"hex"}
-    },
-    {"name": "recent_visit",
-     "value": {"column_position": 3, "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
-    },
-    {"name": "rating",
-     "value": {"column_position": 8, "type" : "float"}
-    }
-  ]
+  "mappings": [
+        {
+          "key": {"column_position":2, "type": "string"},
+        
+          "set": { "column_position":4 , "type": "string"},
+        
+          "binlist": [
+            {"name": "age",
+             "value": {"column_position": 5, "type" : "integer"}
+            },
+            {"name": "location",
+             "value": {"column_position": 1, "type" : "string"}
+            },
+            {"name": "name",
+             "value": {"column_position": 6, "type" : "String"}
+            },
+            {"name": "name_blob",
+             "value": {"column_position": 7, "type" : "blob", "dst_type" : "blob" , "encoding":"hex"}
+            },
+            {"name": "recent_visit",
+             "value": {"column_position": 3, "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
+            },
+            {"name": "rating",
+             "value": {"column_position": 8, "type" : "float"}
+            }
+          ]
+        }
+    ]
 }
 ```
 ### Explanation:
 
--  As there is no header information in data file so "ignore_first_line" should be false.
+-  As there is no header information in data file so "header_exist" should be false.
 -  Each column mapping is specified in column_position only.
 -  Check [example-1](#with header) for other details.
 
 <a name="static value"></a>
 ##__3. Static value__:
-Apart from loading data from file, we can add extra information for each record. Example given below inserts user name and from which db this data is taken as extra information.
+Apart from loading data from file, user can add extra information for each record. Example given below inserts user name and from which db this data is taken as extra information.
 
 ### Data file content:
-```CSV
-IND, userid1, 04/1/2014, facebook, 20, X20, 583230, 8.1
-USA, userid2, 03/18/2014, twitter, 27, X2, 5832, 6.4
-UK, userid3, 01/9/2014, twitter, 21, X3, 5833, 4.3
-UK, userid4, 01/2/2014, facebook, 16, X9, 5839, 5.9
-IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
+```DSV
+IND## userid1## 04/1/2014## facebook## 20## X20## 583230## 8.1
+USA## userid2## 03/18/2014## twitter## 27## X2## 5832## 6.4
+UK## userid3## 01/9/2014## twitter## 21## X3## 5833## 4.3
+UK## userid4## 01/2/2014## facebook## 16## X9## 5839## 5.9
+IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
 ```
 ### Config file content:
 ```JSON
 {
-  "version" : "1.0",
-  "input_type" : "csv",
-  "csv_style": { "delimiter": "," , "n_columns_datafile": 8, "ignore_first_line": false},
+  "version" : "2.0",
+  "dsv_config": { "delimiter": "," , "n_columns_datafile": 8, "header_exist": false},
 
-
-  "key": {"column_position":2, "type": "string"},
-
-  "set": { "column_position":4 , "type": "string"},
-
-  "binlist": [
-    
-    {
-     "name": "name",
-     "value": {"column_position": 6, "type" : "String"}
-    },
-    {
-      "name": "load_from",
-      "value": "xyz database"
-    }
-    
+  "mappings": [
+      {
+          "key": {"column_position":2, "type": "string"},
+        
+          "set": { "column_position":4 , "type": "string"},
+        
+          "binlist": [
+            
+            {
+             "name": "name",
+             "value": {"column_position": 6, "type" : "String"}
+            },
+            {
+              "name": "load_from",
+              "value": "xyz database"
+            }
+            
+          ]
+      }
   ]
 }
 ```
@@ -180,22 +186,21 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
 
 <a name="system_time"></a>
 ##__4. System time__:
-Apart from loading data from file, we can add system time of writting for each record. Example given below inserts user name and System time of writting in millisecond. this data is taken as extra information.
+Apart from loading data from file, user can add system time of writting for each record. Example given below inserts user name and System time of writting in millisecond. this data is taken as extra information.
 
 ### Data file content:
-```CSV
-IND, userid1, 04/1/2014, facebook, 20, X20, 583230, 8.1
-USA, userid2, 03/18/2014, twitter, 27, X2, 5832, 6.4
-UK, userid3, 01/9/2014, twitter, 21, X3, 5833, 4.3
-UK, userid4, 01/2/2014, facebook, 16, X9, 5839, 5.9
-IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
+```DSV
+IND## userid1## 04/1/2014## facebook## 20## X20## 583230## 8.1
+USA## userid2## 03/18/2014## twitter## 27## X2## 5832## 6.4
+UK## userid3## 01/9/2014## twitter## 21## X3## 5833## 4.3
+UK## userid4## 01/2/2014## facebook## 16## X9## 5839## 5.9
+IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
 ```
 ### Config file content:
 ```JSON
 {
-  "version" : "1.0",
-  "input_type" : "csv",
-  "csv_style": { "delimiter": "," , "n_columns_datafile": 8, "ignore_first_line": false},
+  "version" : "2.0",
+  "dsv_config": { "delimiter": "," , "n_columns_datafile": 8, "header_exist": false},
 
 
   "key": {"column_position":2, "type": "string"},
@@ -209,7 +214,7 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
      "value": {"column_position": 6, "type" : "String"}
     },
     {"name": "write_time",
-     "value": {"column_name": "System_time", "type" : "timestamp", "encoding":"MM/dd/yy HH:mm:ss.SSS", "dst_type": "integer"}
+     "value": {"column_name": "system_time", "type" : "timestamp", "encoding":"MM/dd/yy HH:mm:ss.SSS", "dst_type": "integer"}
     }
     
   ]
@@ -226,7 +231,7 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
 
 ```java
 
-	./run_loader -c ~/pathto/config.json ~/pathto/data.csv
+	./run_loader -c ~/pathto/config.json ~/pathto/data.dsv
 
 ```
 
@@ -234,7 +239,7 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
 
 ```java
 
-	./run_loader -c ~/pathto/config.json data1.csv data2.csv data3.csv
+	./run_loader -c ~/pathto/config.json data1.dsv data2.dsv data3.dsv
 
 ```
 
@@ -249,7 +254,7 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
 
 ```java
 
-	./run_loader -c ~/pathto/config.csv -T PST data/
+	./run_loader -c ~/pathto/config.dsv -tz PST data/
 
 ```
 
@@ -257,7 +262,7 @@ IND, userid5, 08/20/2014, twitter, 37, X10, 583130, 9.3
 
 ```java
 
-	./run_loader -c ~/pathto/config.csv -wa update data/
+	./run_loader -c ~/pathto/config.dsv -wa update data/
 
 ```
 

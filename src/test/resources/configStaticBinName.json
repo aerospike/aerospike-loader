@@ -1,0 +1,25 @@
+{
+  "version" : "2.0",
+  "dsv_config": {
+    "delimiter": ",",
+    "n_columns_datafile": 4,
+    "header_exist": true
+  },
+  "mappings": [
+	  {
+		  "key": {
+		    "column_position": 2,
+		    "type": "string"
+		  },
+		  "set": {
+		    "column_position": 4
+		  },
+		  "bin_list": [
+		    {
+		      "name": "Inserted_from",
+		      "value": "abc_db"
+		    }
+		  ]
+	  }
+  ]
+}

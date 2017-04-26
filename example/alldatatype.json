@@ -1,0 +1,49 @@
+{
+  	"version" : "2.0",
+  	"input_type" : "dsv",
+  	"dsv_config": { "delimiter": "##" , "n_columns_datafile": 10, "header_exist": true},
+
+	"mappings": [
+  		{
+  			"key": {"column_name":"key", "type": "string"},
+
+  			"set": { "column_name":"set" , "type": "string"},
+
+  			"bin_list": [
+				{
+					"name": "intDataBin",
+		     		"value": {"column_name": "intData", "type" : "integer"}
+			   	},
+			    {
+			    	"name": "floatDataBin",
+			     	"value": {"column_name": "floatData", "type" : "float"}
+			    },
+			        {
+			    	"name": "stringDataBin",
+			     	"value": {"column_name": "stringData", "type" : "string"}
+			    },
+			    {
+			    	"name": "listDataBin",
+			     	"value": {"column_name": "listData", "type" : "json"}
+			    },
+			    {
+			    	"name": "mapDataBin",
+			     	"value": {"column_name": "mapData", "type" : "json"}
+			    },
+			    {
+			    	"name": "dateDataBin",
+			    	"value": {"column_name": "dateData", "type" : "timestamp",  "dst_type": "integer", "encoding":"MM/dd/yy"}
+			    },
+			    {
+			    	"name": "blobDataBin",
+			    	"value": {"column_name": "blobData", "type" : "blob", "dst_type": "blob", "encoding":"hex"}
+			    },
+	    		{
+    				"name": "timestamp",
+    				"value": {"column_name": "system_time", "type" : "timestamp",  "dst_type": "integer", "encoding":"MM/dd/yy"}
+    			}
+  			]
+  		}
+  	]
+
+}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 by Aerospike.
+ * Copyright 2017 by Aerospike.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -37,305 +38,343 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 /**
- * Parser class to parse different formated files.
+ * Parser class to parse different schema/(data definition) and data files.
  *
  */
 public class Parser {
 	private static Logger log = Logger.getLogger(Parser.class);
 	
 	
+	public static void setLogLevel(boolean verbose) {
+		if (verbose) {
+			log.setLevel(Level.DEBUG);
+		}
+	}
+
 	/**
-	 * Process column definitions in JSON formated file and create two lists for metadata and bindata and one list for metadataLoader
-	 * @param file Config file name
-	 * @param metadataLoader Map of metadata for loader to use, given in config file
-	 * @param metadataColumnDefs List of column definitions for metadata of bins like key,set 
-	 * @param binColumnDefs List of column definitions for bins
-	 * @param params User given parameters
+	 * Process column definitions in JSON formated file and create two lists for metadata and
+	 * bindata and one list for metadataLoader
+	 * 
+	 * @param  configFile     Config/schema/definition file name
+	 * @param  dsvConfigs     DSV configuration for loader to use, given in config file (version, n_columns, delimiter...)
+	 * @param  mappingDefs    List of schema/definitions for all mappings. primary + secondary mappings.
+	 * @param  params         User given parameters
 	 * @throws ParseException 
 	 * @throws IOException 
 	 */
-	public static boolean processJSONColumnDefinitions(File file, HashMap<String, String> metadataConfigs, List<ColumnDefinition> metadataColumnDefs, List<ColumnDefinition> binColumnDefs, Parameters params ) {
-		boolean processConfig = false;
-		if (params.verbose) {
-			log.setLevel(Level.DEBUG);				
-		}
+	public static boolean parseJSONColumnDefinitions(File configFile, HashMap<String, String> dsvConfigs,	List<MappingDefinition> mappingDefs) {
+		FileReader fr = null;
 		try {
-			// Create parser object
 			JSONParser jsonParser = new JSONParser();
-			
-			// Read the json config file
+
 			Object obj;
-			obj =  jsonParser.parse(new FileReader(file));
-			
+			fr = new FileReader(configFile);
+			obj = jsonParser.parse(fr);
+
 			JSONObject jobj;
-			// Check config file contains metadata for datafile
-			if(obj == null) {
-				log.error("Empty config File");
-				return processConfig;
+			if (obj == null) {
+				log.error("Empty config File.");
+				if (fr != null)
+					fr.close();
+				return false;
 			} else {
 				jobj = (JSONObject) obj;
-				log.debug("Config file contents:" + jobj.toJSONString());
-			}			
-			
-			// Get meta data of loader
-			// Search for input_type
-			if((obj = getJsonObject(jobj,Constants.VERSION)) != null){
-				metadataConfigs.put(Constants.VERSION, obj.toString());
-			} else {
-				log.error("\"" + Constants.VERSION + "\"  Key is missing in config file");
-				return processConfig;
+				log.debug("Config file contents: " + jobj.toJSONString());
+			}
+
+			/*
+			 * Get Metadata, DSV_CONFIG parameters. version, (n_columns, delimiter, header_exist..)
+			 * Get mapping definition
+			 */
+			if (getUpdateDsvConfig(jobj, dsvConfigs) == false
+					|| getUpdateMappingColumnDefs(jobj, mappingDefs) == false) {
+				if (fr != null)
+					fr.close();
+				return false;
 			}
 			
-			if((obj = getJsonObject(jobj,Constants.INPUT_TYPE)) != null) {
-				
-				// Found input_type, check for csv 
-				if(obj instanceof String && obj.toString().equals(Constants.CSV_FILE)) {
-					// Found csv format
-					metadataConfigs.put(Constants.INPUT_TYPE, obj.toString());
-					
-					// Search for csv_style
-					if ((obj = getJsonObject(jobj,Constants.CSV_STYLE)) != null){
-						// Found csv_style
-						JSONObject cobj = (JSONObject) obj;
-						
-						// Number_Of_Columns in data file
-						if((obj = getJsonObject(cobj,Constants.COLUMNS)) != null){
-							metadataConfigs.put(Constants.COLUMNS, obj.toString());
-						} else {
-							log.error("\"" + Constants.COLUMNS + "\"  Key is missing in config file");
-							return processConfig;
-						}
-						
-						// Delimiter for parsing data file
-						if((obj = getJsonObject(cobj,Constants.DELIMITER)) != null)
-							metadataConfigs.put(Constants.DELIMITER, obj.toString());
-						
-						// Skip first row of data file if it contains column names
-						if((obj = getJsonObject(cobj,Constants.IGNORE_FIRST_LINE)) != null)
-							metadataConfigs.put(Constants.IGNORE_FIRST_LINE, obj.toString());
-						
-					} else {
-						log.error("\"" + Constants.CSV_STYLE + "\"  Key is missing in config file");
-						return processConfig;
-					}
-				} else {
-					log.error("\"" + obj.toString() + "\"  file format is not supported in config file");
-					return processConfig;
-				}
-				
-			} else {
-				log.error("\"" + Constants.INPUT_TYPE + "\"  Key is missing in config file");
-				return processConfig;
-			}
-			
-			
-			// Get metadata of records
-			// Get key definition of records
-			if((obj = getJsonObject(jobj,Constants.KEY)) != null) {				
-				metadataColumnDefs.add(getColumnDefs( (JSONObject) obj, Constants.KEY));
-			} else {
-				log.error("\"" + Constants.KEY + "\"  Key is missing in config file");
-				return processConfig;
-			}
-			
-			// Get set definition of records. Optional because we can get "set" name from user.
-			if((obj =  getJsonObject(jobj,Constants.SET)) != null) {
-				if (obj instanceof String) {
-					metadataColumnDefs.add(new ColumnDefinition(Constants.SET, obj.toString() , true, true, "string", "string", null, -1, -1, null, null));
-				} else {
-					metadataColumnDefs.add(getColumnDefs( (JSONObject) obj, Constants.SET));
-				}
-			} 
-			
-			// Get bin column definitions 
-			JSONArray binList;
-			if((obj = getJsonObject(jobj,Constants.BINLIST)) != null) {
-				// iterator for bins
-				binList = (JSONArray) obj;
-				Iterator<?> i = binList.iterator();
-				// take each bin from the JSON array separately
-				while (i.hasNext()) {
-					JSONObject binObj = (JSONObject) i.next();
-					binColumnDefs.add(getColumnDefs(binObj, Constants.BINLIST));
-				}
-				
-			} else {
-				return processConfig;
-			}
-			log.info(String.format("Number of columns: %d(metadata) + %d(bins)", (metadataColumnDefs.size()), binColumnDefs.size()));
-			processConfig = true;
 		} catch (IOException ie) {
-			log.error("File:"+ Utils.getFileName(file.getName()) + " Config i/o Error: " + ie.toString());
-			if(log.isDebugEnabled()){
+			log.error("File: " + Utils.getFileName(configFile.getName()) + " Config i/o Error: " + ie.toString());
+			if (log.isDebugEnabled()) {
 				ie.printStackTrace();
 			}
 		} catch (ParseException pe) {
-			log.error("File:"+ Utils.getFileName(file.getName()) + " Config parsing Error: " + pe.toString());
-			if(log.isDebugEnabled()){
+			log.error("File: " + Utils.getFileName(configFile.getName()) + " Config parsing Error: " + pe.toString());
+			if (log.isDebugEnabled()) {
 				pe.printStackTrace();
 			}
-		
+
 		} catch (Exception e) {
-			log.error("File:"+ Utils.getFileName(file.getName()) + " Config unknown Error: " + e.toString());
-			if(log.isDebugEnabled()){
+			log.error("File: " + Utils.getFileName(configFile.getName()) + " Config unknown Error: " + e.toString());
+			if (log.isDebugEnabled()) {
 				e.printStackTrace();
 			}
+		} finally {
+			if (fr == null) {
+				return true;
+			}
+			try {
+				fr.close();
+			} catch (IOException fce) {
+				log.error("File: " + Utils.getFileName(configFile.getName()) + " File reader closing error: "
+						+ fce.toString());
+				if (log.isDebugEnabled()) {
+					fce.printStackTrace();
+				}
+			}
 		}
-		
-		return processConfig;
+		return true;
 	}
-	
-	public static Object getJsonObject(JSONObject jobj, String key) {
-		Object obj = null;
-		if ((obj = jobj.get(key)) == null){
-			log.warn("\"" + key + "\"  Key is missing in config file");
-		}
-		return obj;
-	}
-	
-	/**
-	 * 
-	 * @param jobj JSON object which contains json formatted data
-	 * @param jobjName JSON object name for which it asks for
-	 * @return ColumnDefinition object
-	 */
-	public static ColumnDefinition getColumnDefs(JSONObject jobj, String jobjName) throws Exception{
-		String binNameHeader = null;
-		String binValueHeader = null;
-		boolean staticName = true;
-		boolean staticValue = true;
-		String srcType = null;
-		String dstType = null;
-		String encoding = null;
-		int binNamePos = -1;
-		int binValuePos = -1 ;
-		String columnName = null;
-		String jsonPath = null;
 
-		if(Constants.KEY.equalsIgnoreCase(jobjName)  || Constants.SET.equalsIgnoreCase(jobjName)) {
-			// Get key/set location
-			if ((jobj.get(Constants.COLUMN_POSITION)) == null) {
-				if ((columnName = (String)(jobj.get(Constants.COLUMN_NAME))) == null) {
-					if ((jsonPath = (String)(jobj.get(Constants.JSON_PATH))) == null) {
-						log.error("Specify proper key/set mapping in config file for " + jobjName + ":" + jobj.toString());
-					} else {
-						//TODO for json format
-					}
-				} else {
-					binNameHeader = jobjName;
-					binValueHeader = columnName;
-				}
-			} else {
-				binNameHeader = jobjName;
-				binValuePos = (Integer.parseInt(jobj.get(Constants.COLUMN_POSITION).toString())-1);
-			}
-			
-			// Get key type
-			if (Constants.KEY.equalsIgnoreCase(jobjName)) {
-				srcType = (String) jobj.get(Constants.TYPE);				
-			}
-			
-			// Default set type is string
-			if (Constants.SET.equalsIgnoreCase(jobjName)) {
-				srcType = (String) jobj.get(Constants.TYPE);
-				if (srcType == null)
-					srcType = "string";
-			}
-			
-			//key and set value are always dynamic
-			staticValue = false;
-			
-		} else if (Constants.BINLIST.equalsIgnoreCase(jobjName)){
-			Object obj;			
-			// Get name information of bin
-			if ((obj = jobj.get(Constants.NAME)) != null) {
-				if (obj instanceof JSONObject) {
-					staticName = false;
-					JSONObject nameObj = (JSONObject) obj;
-					if ((nameObj.get(Constants.COLUMN_POSITION)) == null) {
-						if ((columnName = (String)(nameObj.get(Constants.COLUMN_NAME))) == null) {
-							if ((jsonPath = (String)(nameObj.get(Constants.JSON_PATH))) == null) {
-								log.error("Specify proper bin name mapping in config file for " + jobjName + ":" + jobj.toString());
-							} else {
-								//TODO for json format
-							}
-						} else 
-							binNameHeader = columnName;
-					} else {
-						binNamePos = (Integer.parseInt(nameObj.get(Constants.COLUMN_POSITION).toString())-1);
-					}
-				} else {
-					binNameHeader = (String) obj;//default name
-				}
-			} else {
-				log.error(Constants.NAME + " key is missing object:"+ jobj.toString());
-			}
-		
-			// Get value information of bin
-			JSONObject valueObj;
-			if ((obj = jobj.get(Constants.VALUE)) != null){
-				if(obj instanceof JSONObject) {
-					staticValue = false;
-					valueObj = (JSONObject) obj;
-					
-					if ((valueObj.get(Constants.COLUMN_POSITION)) == null) {
-						if ((columnName = (String)(valueObj.get(Constants.COLUMN_NAME))) == null) {
-							if ((jsonPath = (String)(valueObj.get(Constants.JSON_PATH))) == null) {
-								log.error("Specify proper bin value mapping in config file for " + jobjName);
-							} else {
-								//TODO for json
-							}
-						} else {
-							binValueHeader = columnName;
-						}
-					} else {
-						
-						binValuePos = (Integer.parseInt(valueObj.get(Constants.COLUMN_POSITION).toString())-1);
-						
-					}
-					
-					// Get src data type
-					if ((srcType = (String)(valueObj.get(Constants.TYPE))) == null) {
-						log.error(Constants.TYPE + " key is missing in bin object:"+ jobj.toString());
-					}
-					// Get destination type conversion for src data format
-					if ((dstType = (String)(valueObj.get(Constants.DST_TYPE))) != null) {
-						//log.error(Constants.DST_TYPE + " key is missing in bin object:"+ jobj.toString());
-					}
-					// Get encoding format 
-					if ((encoding = (String)(valueObj.get(Constants.ENCODING))) == null) {
-						//log.error(Constants.ENCODING + " key is missing in bin object:"+ jobj.toString());
-					}				
-				} else {
-					binValueHeader = (String) obj;// default value
-				} 
-			} else {
-				log.error(Constants.VALUE + " key is missing in bin object:"+ jobj.toString());
-			}
-			
+	/*
+	 * Parse Dsv_configs from config file.
+	 */
+	private static boolean getUpdateDsvConfig(JSONObject jobj, HashMap<String, String> dsvConfigs) {
+		Object obj = null;
+
+		// Get Metadata of loader (update dsvConfigs)
+		if ((obj = getFromJsonObject(jobj, Constants.VERSION)) == null) {
+			log.error("\"" + Constants.VERSION + "\"  Key is missing in config file.");
+			return false;
 		}
-		ColumnDefinition colDef = new ColumnDefinition(binNameHeader, binValueHeader , staticName, staticValue, srcType, dstType, encoding, binNamePos, binValuePos, columnName, jsonPath);
+		dsvConfigs.put(Constants.VERSION, obj.toString());
+
 		
-		return colDef;
+		// Get DSV_CONFIG parameters. (n_columns, delimiter, header_exist..)
+		if ((obj = getFromJsonObject(jobj, Constants.DSV_CONFIG)) == null) {
+			log.error("\"" + Constants.DSV_CONFIG + "\"  Key is missing in config file.");
+			return false;
+		}
+		JSONObject dsvConfigObj = (JSONObject) obj;
+
+		if ((obj = getFromJsonObject(dsvConfigObj, Constants.N_COLUMN)) == null) {
+			log.error("\"" + Constants.N_COLUMN + "\"  Key is missing in config file.");
+			return false;
+		}
+		dsvConfigs.put(Constants.N_COLUMN, obj.toString());
+
+		// Delimiter and Header_exist config are optional.
+		if ((obj = getFromJsonObject(dsvConfigObj, Constants.DELIMITER)) != null)
+			dsvConfigs.put(Constants.DELIMITER, obj.toString());
+
+		if ((obj = getFromJsonObject(dsvConfigObj, Constants.HEADER_EXIST)) != null)
+			dsvConfigs.put(Constants.HEADER_EXIST, obj.toString());
+		
+		return true;
+	}
+
+	/*
+	 * Parse all mapping given in config file.
+	 */
+	private static boolean getUpdateMappingColumnDefs(JSONObject jobj, List<MappingDefinition> mappingDefs) throws Exception {
+		Object obj = null;
+		JSONArray mappings;
+		if ((obj = getFromJsonObject(jobj, Constants.MAPPINGS)) != null) {
+			mappings = (JSONArray) obj;
+			Iterator<?> it = mappings.iterator();
+			while (it.hasNext()) {
+				JSONObject mappingObj = (JSONObject) it.next();
+				MappingDefinition md = getMappingDef(mappingObj);
+				if (md != null) {
+					mappingDefs.add(md);
+				} else {
+					log.error("Error in parsing mappingdef: " + mappingObj.toString());
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 	
-	/**
-	 * Parses the line into raw column string values
-	 * Format of data should follow one rule: No delimeter contain same character as data part
-	 * @param line One line in data file with CSV formated
-	 * @return List List of column entries from line
+	private static Object getFromJsonObject(JSONObject jobj, String key) {
+		return jobj.get(key);
+	}
+
+	/*
+	 * Parse mapping definition from config file to get mappingDef
+	 * This will have (secondary_mapping_ keyDefinition, setDefinition, binDefinition).  
 	 */
-	public static List<String> getCSVRawColumns(String line, char delimiter){
+	private static MappingDefinition getMappingDef(JSONObject mappingObj) throws Exception {
 		
+		boolean secondary_mapping = false;
+		MetaDefinition keyColumnDef = null;
+		MetaDefinition setColumnDef = null;
+		List<BinDefinition> binColumnDefs = new ArrayList<BinDefinition>();
+
+		Object obj;
+
+		// Get secondary_mapping info.
+		obj = getFromJsonObject(mappingObj, Constants.SECONDARY_MAPPING);
+		if (obj != null) {
+			secondary_mapping = Boolean.valueOf((String) obj);
+		}
+
+		if ((obj = getFromJsonObject(mappingObj, Constants.KEY)) != null) {
+			keyColumnDef = getMetaDefs((JSONObject) obj, Constants.KEY);
+		} else {
+			log.error("\"" + Constants.KEY + "\"  Key is missing in mapping. Mapping: " + mappingObj.toString());
+			return null;
+		}
+
+
+		if ((obj = getFromJsonObject(mappingObj, Constants.SET)) == null) {
+			log.error("\"" + Constants.SET + "\"  Key is missing in mapping. Mapping: " + mappingObj.toString());
+			return null;
+		} else if (obj instanceof String) {
+			setColumnDef = new MetaDefinition(obj.toString(), null);
+		} else {
+			setColumnDef = getMetaDefs((JSONObject) obj, Constants.SET);
+		}
+
+		if ((obj = getFromJsonObject(mappingObj, Constants.BINLIST)) != null) {
+			JSONArray binObjList = (JSONArray) obj;
+			Iterator<?> it = binObjList.iterator();
+			while (it.hasNext()) {
+				JSONObject binObj = (JSONObject) it.next();
+				BinDefinition binDef = getBinDefs(binObj);
+				if (binDef != null) {
+					binColumnDefs.add(binDef);
+				} else {
+					log.error("Error in parsing binDef: " + binObj.toString());
+					return null;
+				}
+			}
+		} else {
+			log.error("\"" + Constants.BINLIST + "\"  Key is missing in mapping. Mapping: " + mappingObj.toString());
+			return null;
+		}
+
+		return new MappingDefinition(secondary_mapping, keyColumnDef, setColumnDef, binColumnDefs);
+	}
+
+	/*
+	 * Parsing Meta definition(for Set or Key) from config file and populate metaDef object.
+	 */
+	private static MetaDefinition getMetaDefs(JSONObject jobj, String jobjName) {
+		// Parsing Key, Set definition
+		ColumnDefinition valueDef = new ColumnDefinition(-1, null, null, null, null, null, null);
+		
+		if ((jobj.get(Constants.COLUMN_POSITION)) != null) {
+			
+			valueDef.columnPos = (Integer.parseInt(jobj.get(Constants.COLUMN_POSITION).toString()) - 1);
+			
+		} else if ((jobj.get(Constants.COLUMN_NAME)) != null) {
+			
+			valueDef.columnName = (String) (jobj.get(Constants.COLUMN_NAME));
+
+		} else {
+			log.error("Column_name or pos info is missing. Specify proper key/set mapping in config file for: " + jobjName + ":"
+					+ jobj.toString());
+		}
+
+		valueDef.setSrcType((String) jobj.get(Constants.TYPE));
+
+		// Default set type is 'string'. what is default key type?
+		if (Constants.SET.equalsIgnoreCase(jobjName) && valueDef.srcType == null) {
+			valueDef.setSrcType("string");
+		}
+
+		// Get prefix to remove. Prefix will be removed from data
+		if ((jobj.get(Constants.REMOVE_PREFIX)) != null) {
+			valueDef.removePrefix = (String) jobj.get(Constants.REMOVE_PREFIX);
+		}
+		
+		return new MetaDefinition(null, valueDef);
+	}
+
+	/*
+	 * Parsing Bin definition from config file and populate BinDef object
+	 */
+	private static BinDefinition getBinDefs(JSONObject jobj) {
+		/*
+		 * Sample Bin object
+		 * {"name": "age", "value": {"column_name": "age", "type" : "integer"} }
+		 */
+
+		Object obj;
+
+		// Parsing Bin name
+		ColumnDefinition nameDef = new ColumnDefinition(-1, null, null, null, null, null, null);
+		String staticBinName = null;
+		
+		if ((obj = jobj.get(Constants.NAME)) == null) {
+			log.error(Constants.NAME + " key is missing object: " + jobj.toString());
+			return null;
+		} else if (!(obj instanceof JSONObject)) {
+			staticBinName = (String) obj;
+		} else {
+			JSONObject nameObj = (JSONObject) obj;
+			if ((nameObj.get(Constants.COLUMN_POSITION)) != null) {
+				
+				nameDef.columnPos = (Integer.parseInt(nameObj.get(Constants.COLUMN_POSITION).toString()) - 1);
+				
+			} else if ((nameObj.get(Constants.COLUMN_NAME)) != null) {
+				
+				nameDef.columnName = (String) (nameObj.get(Constants.COLUMN_NAME));
+
+			} else {
+				log.error("Column_name or pos info is missing. Specify proper bin name mapping in config file for: " + jobj.toString());
+			}
+		}
+
+		// Parsing Bin value
+		ColumnDefinition valueDef = new ColumnDefinition(-1, null, null, null, null, null, null);
+		String staticBinValue = null;
+
+		if ((obj = jobj.get(Constants.VALUE)) == null) {
+			log.error(Constants.VALUE + " key is missing in bin object:" + jobj.toString());
+			return null;
+		} else if (!(obj instanceof JSONObject)) {
+			staticBinValue = (String) obj;
+		} else {
+			JSONObject valueObj = (JSONObject) obj;
+			
+			if ((valueObj.get(Constants.COLUMN_POSITION)) != null) {
+				
+				valueDef.columnPos = (Integer.parseInt(valueObj.get(Constants.COLUMN_POSITION).toString()) - 1);
+				
+			} else if ((valueObj.get(Constants.COLUMN_NAME)) != null) {
+				
+				valueDef.columnName = (String) (valueObj.get(Constants.COLUMN_NAME));
+
+			} else {
+				log.error("Column_name or pos info is missing. Specify proper bin value mapping in config file for: " + jobj.toString());
+			}
+			
+			valueDef.setSrcType((String) (valueObj.get(Constants.TYPE)));
+			if (valueDef.srcType == null) {
+				log.error(Constants.TYPE + " key is missing in bin object: " + jobj.toString());
+			}
+			valueDef.setDstType((String) (valueObj.get(Constants.DST_TYPE)));
+			valueDef.encoding = (String) (valueObj.get(Constants.ENCODING));
+			valueDef.removePrefix = ((String) (valueObj.get(Constants.REMOVE_PREFIX)));
+		}
+		
+		return new BinDefinition(staticBinName, staticBinValue, nameDef, valueDef); 
+	}
+
+	/**
+	 * Parses the line into list of raw column string values
+	 * Format of data should follow one rule: Data should not contain delimiter as part of data.
+	 * 
+	 * @param  line: line from the data file with DSV formated
+	 * @return List: List of column entries from line
+	 */
+	public static List<String> getDSVRawColumns(String line, String delimiter){
+		if(line==null || line.trim().length()==0){
+			return null;
+		}
 		List<String> store = new ArrayList<String>();
 		StringBuilder curVal = new StringBuilder();
 		boolean inquotes = false;
 		boolean prevDelimiter = false;
+		char[] delimiterChars = delimiter.toCharArray();
+		int delimiterIndex = 0;
 		for (int i=0; i<line.length(); i++) {
 			
 			char ch = line.charAt(i);
 			
-			// trim white space and tabs after delimiter
+			// Trim white space and tabs after delimiter
 			if (prevDelimiter) {
 				if (Character.isWhitespace(ch)) {
 					continue;
@@ -344,9 +383,44 @@ public class Parser {
 				}
 			}
 			
-			
+			if (ch == delimiterChars[delimiterIndex] && !(inquotes)) {
+				if (delimiterIndex == delimiterChars.length-1){
+					prevDelimiter = true;
+					// Trim will remove all whitespace character from end of string or
+					// after ending double quotes
+					store.add(curVal.toString().trim());
+					curVal = new StringBuilder();
+					delimiterIndex = 0;
+					inquotes = false;
+				}
+				else{
+					delimiterIndex++;
+				}
+				continue;
+			}
+			if (delimiterIndex > 0){
+				// Appending partial delimiters read till now
+				curVal.append(Arrays.copyOfRange(delimiterChars, 0, delimiterIndex));
+				delimiterIndex = 0;
+
+				if (ch == delimiterChars[delimiterIndex]) {
+					if (delimiterIndex == delimiterChars.length-1){
+						prevDelimiter = true;
+						// Trim will remove all whitespace character from end of string or
+						// after ending double quotes
+						store.add(curVal.toString().trim());
+						curVal = new StringBuilder();
+						delimiterIndex = 0;
+						inquotes = false;
+					}
+					else{
+						delimiterIndex++;
+					}
+					continue;
+				}
+			}
 			if (inquotes) {
-				if (ch== Constants.DOUBLE_QOUTE_DELEMITER) {
+				if (ch== Constants.DOUBLE_QUOTE_DELEMITER) {
 					inquotes = false;
 				}
 				else {
@@ -355,29 +429,22 @@ public class Parser {
 			}
 			else {
 				
-				if (ch == Constants.DOUBLE_QOUTE_DELEMITER) {
+				if (ch == Constants.DOUBLE_QUOTE_DELEMITER) {
 					inquotes = true;
 					if (curVal.length()>0) {
 						inquotes = false;
-						//if this is the second quote in a value, add a quote
+						//If this is the second quote in a value, add a quote
 						//this is for the double quote in the middle of a value
 						curVal.append('\"');
 					}
 				}
-				
-				else if (ch == delimiter) {
-					prevDelimiter = true;
-					// trim will remove all whitespace character from end of string or
-					// after ending double quotes 
-					store.add(curVal.toString());
-					curVal = new StringBuilder();
-				}
-				else {
+				else{
 					curVal.append(ch);
 				}
 			}
 		}
-		store.add(curVal.toString());
+		store.add(curVal.toString().trim());
 		return store;
 	}
+	
 }

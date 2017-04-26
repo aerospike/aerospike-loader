@@ -21,44 +21,32 @@
  ******************************************************************************/
 package com.aerospike.load;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
- * Counter class to keep track of statistic of Loader.
  * 
  * @author Aerospike
- *
+ * 
+ * MetaDefinition (KeyDefinition/SetDefinition) populated by parsing config file.
+ * 
  */
-public class Counter {
-
-	public static class Current {
-		// Read from File
-		AtomicInteger readCount = new AtomicInteger();
-		AtomicInteger readErrors = new AtomicInteger();
-
-		// Queued for processing
-		AtomicInteger processingQueued = new AtomicInteger();
-		AtomicInteger processingCount = new AtomicInteger();
-		AtomicInteger processingErrors = new AtomicInteger();
-		
-		// Write to Aerospike
-		AtomicInteger writeCount = new AtomicInteger();
-		AtomicInteger mappingWriteCount = new AtomicInteger();
-		AtomicInteger writeErrors = new AtomicInteger();
-		AtomicInteger writeTimeouts = new AtomicInteger();
-		AtomicInteger writeKeyExists = new AtomicInteger();
-		AtomicInteger keyNullSkipped = new AtomicInteger();
-		AtomicInteger noBinsSkipped = new AtomicInteger();
-
-		// Write start time tracker
-		long writeStartTime;
-
-		// Progress tracker
-		long bytesTotal;
-		AtomicLong bytesProcessed = new AtomicLong();
+public class MetaDefinition {
+	String staticName;
+	ColumnDefinition nameDef;
+	
+	public MetaDefinition(String staticName, ColumnDefinition nameDef) {
+		this.staticName = staticName;
+		this.nameDef = nameDef;
 	}
 
-	Current write = new Current();
-	static int numCol;
+	public String getBinStaticName() {
+		return this.staticName;
+	}
+
+	public ColumnDefinition getBinNameDef() {
+		return this.nameDef;
+	}
+
+	@Override
+	public String toString() {
+		return "ColumnDefinition [staticName=" + this.staticName + ", nameDef=" + this.nameDef + "]";
+	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 by Aerospike.
+ * Copyright 2017 by Aerospike.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,13 +21,12 @@
  ******************************************************************************/
 package com.aerospike.load;
 
-
 /**
  * List of source data types
  *
  */
 enum SrcColumnType {
-	INTEGER, STRING, BLOB, LIST, MAP, JSON, TIMESTAMP, FLOAT;
+	INTEGER, STRING, BLOB, JSON, TIMESTAMP, FLOAT;
 }
 /**
  * List of datatypes supported by Aerospike
@@ -36,121 +35,77 @@ enum SrcColumnType {
 enum DstColumnType {
 	INTEGER, STRING, BLOB, LIST, MAP;
 }
+
 /**
  * Column Definition class for data file.
+ * It has same params as column_def(key_def, set_def, Bin.name_def, Bin.Value_def)
+ * section in config file.
  *
  */
 public class ColumnDefinition {
-	String binNameHeader;
-	String binValueHeader;
-	boolean staticName;
-	boolean staticValue;
+
+	int columnPos;
+	String columnName;
 	SrcColumnType srcType;
 	DstColumnType dstType;
 	String encoding;
-	int binNamePos;
-	int binValuePos;
-	String columnName;
+	String removePrefix;
 	String jsonPath;
 	
 	public ColumnDefinition(
-			String binNameHeader,
-			String binValueHeader,
-			boolean staticName,
-			boolean staticValue,
+			int columnPos,
+			String columnName,
 			String srcType,
 			String dstType,
 			String encoding,
-			int binNamePos,
-			int binValuePos,
-			String columnName,
-			String jsonPath
+			String jsonPath,
+			String removePrefix
 	) {
-		this.binNameHeader = binNameHeader;
-		this.binValueHeader = binValueHeader;
-		this.staticName = staticName;
-		this.staticValue = staticValue;
-		setSrcType(srcType);
-		setDstType(dstType);
-		setEncoding(encoding);
-		this.binNamePos = binNamePos;
-		this.binValuePos = binValuePos;
+
+		this.columnPos = columnPos;
 		this.columnName = columnName;
 		this.jsonPath = jsonPath;
+		this.removePrefix = removePrefix;
+		this.encoding = encoding;
+		
+		setSrcType(srcType);
+		setDstType(dstType);
 	}
-	public String getBinNameHeader() {
-		return binNameHeader;
-	}
-	public String getBinValueHeader() {
-		return binValueHeader;
-	}
-	public SrcColumnType getSrcType() {
-		return srcType;
-	}
-	public DstColumnType getDstType() {
-		return dstType;
-	}
-	public String getEncoding() {
-		return encoding;
-	}
-	public int getBinNamePos() {
-		return binNamePos;
-	}
-	public int getBinValuePos() {
-		return binValuePos;
-	}
-	public String getColumnName() {
-		return columnName;
-	}
-	public String getJsonPath() {
-		return jsonPath;
-	}
-	public void setEncoding(String type) {
-		this.encoding = type;
-	}
+
 	public void setSrcType(String type) {
-		if ("string".equalsIgnoreCase(type)){
+		if ("string".equalsIgnoreCase(type)) {
 			this.srcType = SrcColumnType.STRING;
-		} else if ("integer".equalsIgnoreCase(type)){
+		} else if ("integer".equalsIgnoreCase(type)) {
 			this.srcType = SrcColumnType.INTEGER;
-		} else if ("blob".equalsIgnoreCase(type)){
+		} else if ("blob".equalsIgnoreCase(type)) {
 			this.srcType = SrcColumnType.BLOB;
-		} else if ("list".equalsIgnoreCase(type)){
-			this.srcType = SrcColumnType.LIST;
-		} else if ("map".equalsIgnoreCase(type)){
-			this.srcType = SrcColumnType.MAP;
-		} else if ("json".equalsIgnoreCase(type)){
+		} else if ("json".equalsIgnoreCase(type)) {
 			this.srcType = SrcColumnType.JSON;
-		} else if ("timestamp".equalsIgnoreCase(type)){
+		} else if ("timestamp".equalsIgnoreCase(type)) {
 			this.srcType = SrcColumnType.TIMESTAMP;
-		} else if ("float".equalsIgnoreCase(type)){
+		} else if ("float".equalsIgnoreCase(type)) {
 			this.srcType = SrcColumnType.FLOAT;
 		}
 	}
 
 	public void setDstType(String type) {
-		if ("string".equalsIgnoreCase(type)){
+		if ("string".equalsIgnoreCase(type)) {
 			this.dstType = DstColumnType.STRING;
-		} else if ("integer".equalsIgnoreCase(type)){
+		} else if ("integer".equalsIgnoreCase(type)) {
 			this.dstType = DstColumnType.INTEGER;
-		} else if ("blob".equalsIgnoreCase(type)){
+		} else if ("blob".equalsIgnoreCase(type)) {
 			this.dstType = DstColumnType.BLOB;
-		} else if ("list".equalsIgnoreCase(type)){
+		} else if ("list".equalsIgnoreCase(type)) {
 			this.dstType = DstColumnType.LIST;
-		} else if ("map".equalsIgnoreCase(type)){
+		} else if ("map".equalsIgnoreCase(type)) {
 			this.dstType = DstColumnType.MAP;
 		}
 	}
-	
-
 	@Override
+
 	public String toString() {
-		return "ColumnDefinition: [ BinNameHeader:"+this.binNameHeader + 
-				", BinValueHeader:" + this.binValueHeader +
-				", srcType:"+this.srcType+
-				", dstType:"+this.dstType+
-				", Encoding:"+this.encoding+
-				", binNamePos:"+this.binNamePos+
-				", binValuePos:" + this.binValuePos + " ]";
+		return "ColumnDefinition [columnPos=" + columnPos + ", columnName=" + columnName
+				+ ", srcType=" + srcType + ", dstType=" + dstType + ", encoding=" + encoding + ", removePrefix=" + removePrefix
+				+ ", jsonPath=" + jsonPath + "]";
 	}
 }
