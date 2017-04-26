@@ -56,11 +56,11 @@ __Options__:
 -P,--password <arg>             Password
 -n,--namespace <arg>            Namespace (default: test)
 -c,--config <arg>               Column definition file in JSON format
--g,--max-throughput <arg>       Set a target max transactions per second for the loader (default: 0 (don't limit TPS)).
+-g,--max-throughput <arg>       Set a target max transactions per second for the loader (default: 0 (don`t limit TPS)).
 -T,--transaction-timeout <arg>  Transaction timeout in milliseconds for write (default: no timeout)
 -e,--expiration-time <arg>      Time to expire of a record in seconds (default: never expire)
 -tz,--timezone <arg>            TimeZone of source where datadump is taken (default: local timeZone)
--ec,--abort-Error-Count<arg>    Abort when error occurs more than this value (default: 0 (don't abort))
+-ec,--abort-Error-Count<arg>    Abort when error occurs more than this value (default: 0 (don`t abort))
 -wa,--write-Action <arg>        Write action if key already exists (default: update)
 -u,--usage                      Print usage.
 -v,--verbose                    Verbose mode for debug logging (default: INFO)
