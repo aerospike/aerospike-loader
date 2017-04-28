@@ -62,13 +62,14 @@ __Options__:
 -tz,--timezone <arg>            TimeZone of source where datadump is taken (default: local timeZone)
 -ec,--abort-Error-Count<arg>    Abort when error occurs more than this value (default: 0 (don`t abort))
 -wa,--write-Action <arg>        Write action if key already exists (default: update)
+-tls,--tls-enable               Use TLS/SSL sockets(default: False)
+-tp,--tls-protocols             Allow TLS protocols. Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
+-tlsCiphers,--tls-cipher-suite  Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
+-tr,--tls-revoke                Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
+-te,--tls-encrypt-only          Enable TLS encryption and disable TLS certificate validation
+-uk,--send-user-key             Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
 -u,--usage                      Print usage.
 -v,--verbose                    Verbose mode for debug logging (default: INFO)
--tls,--tlsEnable                Use TLS/SSL sockets(default: False)
--tp,--tlsProtocols              Allow TLS protocols. Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
--tlsCiphers,--tlsCipherSuite    Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
--tr,--tlsRevoke                 Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
--te,--tlsEncryptOnly            Enable TLS encryption and disable TLS certificate validation
 ```
 
 For more details, refer to [Options](doc/options.md).

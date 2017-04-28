@@ -117,12 +117,19 @@ public class Utils {
 
 		String timeout = cl.getOptionValue("T", "0");
 		int timeout_int = (Integer.parseInt(timeout));
-		
+
+		boolean sendKey = false;
+		if (cl.hasOption("uk")) {
+			sendKey = true;
+		}
+
 		String writeAction = cl.getOptionValue("wa", "UPDATE");
+
 		WritePolicy writePolicy = new WritePolicy();
 		writePolicy.recordExistsAction = RecordExistsAction.valueOf(writeAction.toUpperCase());
 		writePolicy.timeout = timeout_int;
 		writePolicy.expiration = ttl;
+		writePolicy.sendKey = sendKey;
 
 
 		boolean verbose = false;

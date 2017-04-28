@@ -69,14 +69,14 @@ import com.aerospike.client.util.Util;
  * -tz,--timezone <arg>				TimeZone of source where datadump is taken (default: local timeZone)
  * -ec,--abort-Error-Count<arg>		Abort when error occurs more than this value(default: 0(don't abort))
  * -wa,--write-Action <arg>			Write action if key already exists (default: update)
+ * -tls,--tls-enable                Use TLS/SSL sockets(default: False)
+ * -tp,--tls-protocols              Allow TLS protocols. Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
+ * -tlsCiphers,--tls-cipher-suite   Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
+ * -tr,--tls-revoke                 Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
+ * -te,--tls-encrypt-only           Enable TLS encryption and disable TLS certificate validation
+ * -uk,--send-user-key              Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
  * -u,--usage           			Print usage.
  * -v,--verbose						Verbose mode for debug logging (default: INFO)
- * -tls,--tlsEnable                 Use TLS/SSL sockets(default: False)
- * -tp,--tlsProtocols               Allow TLS protocols. Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
- * -tlsCiphers,--tlsCipherSuite     Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
- * -tr,--tlsRevoke                  Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
- * -te,--tlsEncryptOnly             Enable TLS encryption and disable TLS certificate validation
- * 
  * The file names can be a series of file names or directories. 
  *
  * @author Aerospike
@@ -146,27 +146,30 @@ public class AerospikeLoad implements Runnable {
 			options.addOption("tz", "timezone", true, "Timezone of source where data dump is taken (default: local timezone)");
 			options.addOption("ec", "abort-error-count", true, "Error count to abort (default: 0)");
 			options.addOption("wa", "write-action", true, "Write action if key already exists (default: update)");
-			options.addOption("v", "verbose", false, "Logging all");
-			options.addOption("u", "usage", false, "Print usage.");
-			options.addOption("tls", "tlsEnable", false, "Use TLS/SSL sockets");
-			options.addOption("tp", "tlsProtocols", true, 
+			options.addOption("tls", "tls-enable", false, "Use TLS/SSL sockets");
+			options.addOption("tp", "tls-protocols", true, 
 					"Allow TLS protocols\n" +
 					"Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma\n" +
 					"Default: TLSv1.2"
 					);
-			options.addOption("tlsCiphers", "tlsCipherSuite", true, 
+			options.addOption("tlsCiphers", "tls-cipher-suite", true, 
 					"Allow TLS cipher suites\n" +
 					"Values:  cipher names defined by JVM separated by comma\n" +
 					"Default: null (default cipher list provided by JVM)"
 					);
-			options.addOption("tr", "tlsRevoke", true, 
+			options.addOption("tr", "tls-revoke", true, 
 					"Revoke certificates identified by their serial number\n" +
 					"Values:  serial numbers separated by comma\n" +
 					"Default: null (Do not revoke certificates)"
 					);
-			options.addOption("te", "tlsEncryptOnly", false, 
+			options.addOption("te", "tls-encrypt-only", false, 
 					"Enable TLS encryption and disable TLS certificate validation"
 					);
+			options.addOption("uk", "send-user-key", false, 
+					"Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)"
+					);
+			options.addOption("v", "verbose", false, "Logging all");
+			options.addOption("u", "usage", false, "Print usage.");
 
 			CommandLineParser parser = new PosixParser();
 			CommandLine cl = parser.parse(options, args, false);
