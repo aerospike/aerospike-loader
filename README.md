@@ -1,4 +1,4 @@
-#Aerospike Loader
+# Aerospike Loader
 > Aerospike Loader parses a set of .DSV files and loads the data into Aerospike server.
 
 - [Features](doc/features.md)
@@ -31,7 +31,7 @@
         $ ./build
 
 <a name="Dependencies"></a>
-##Dependencies
+## Dependencies
 Following dependencies are downloaded automatically:
 * Aerospike Java client 3.1.2 or greater
 * Apache commons cli 1.2
@@ -74,7 +74,7 @@ __Options__:
 
 For more details, refer to [Options](doc/options.md).
 
-###Sample usage of all options:
+### Sample usage of all options:
 
         $ ./run_loader -h nodex -p 3000 -n test -T 3000 -e 2592000 -ec 100 -tz PST -wa update -c ~/pathto/config.json datafiles/
 
