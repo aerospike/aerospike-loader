@@ -341,7 +341,7 @@ public class AerospikeLoad implements Runnable {
 		/*
 		 * Process column definition file to get,
 		 * dsv_configs (delimiter, header_exist, n_column)
-		 * mapping definition(key, set, binlist)
+		 * mapping definition(key, set, bin_list)
 		 */
 		File columnDefinitionFile = getColumnDefinitionFile(columnDefinitionFileName);
 		
