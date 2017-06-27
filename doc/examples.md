@@ -36,7 +36,7 @@ IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
         
           "set": { "column_name":"set_name" , "type": "string"},
         
-          "binlist": [
+          "bin_list": [
             {"name": "age",
              "value": {"column_name": "age", "type" : "integer"}
             },
@@ -62,24 +62,24 @@ IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
 ```
 ### Explanation:
 - Specify delimiter (the way two bin values separated), n_columns_datafile(actual column count in data file), header_exist (true if header or column names is mentioned in first line of datafile else false.)
-- Binlist contains array of bin mapping. In each bin mapping two entries are there, one is name which is used as bin name in aerospike and other one is value, which is the bin content mapping. If one column mapping is absent in config file then that column will be skipped while loading.
+- bin_list contains array of bin mapping. In each bin mapping two entries are there, one is name which is used as bin name in aerospike and other one is value, which is the bin content mapping. If one column mapping is absent in config file then that column will be skipped while loading.
 - Instead of using column_name user can use column_position.
 - Native data types integer and string are stored as it is.
-    - add following line to binlist in config file for __integer__ type data.
+    - add following line to bin_list in config file for __integer__ type data.
        - {"name": "age", "value": {  "column_name": "age", "type" : "integer"}}
-    - add following line to binlist in config file for __string__ type data.
+    - add following line to bin_list in config file for __string__ type data.
        - {"name": "location", "value": { "column_name": "user_location", "type" : "string"}}
 - Data types other than native types:
-    - add following line to binlist in config file for __blob__ type data. Data in data file should be in hex format.
+    - add following line to bin_list in config file for __blob__ type data. Data in data file should be in hex format.
        - {"name": "name_blob", "value": {"column_name": "user_name_blob", "type" : "blob", "dst_type" : "blob" , "encoding":"hex"}
     }
-    - add following line to binlist in config file for __float__ type data.
+    - add following line to bin_list in config file for __float__ type data.
        -  {"name": "rating", "value": {"column_name": "user_rating", "type" : "float"}
     }
-    - add following line to binlist in config file for __timestamp__ type data and store it as integer.
+    - add following line to bin_list in config file for __timestamp__ type data and store it as integer.
       - { "name": "recent_visit", "value": {"column_name": "last_visited", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "integer"}
     }
-    - add following line to binlist in config file for __timestamp__ type data and store it as string.
+    - add following line to bin_list in config file for __timestamp__ type data and store it as string.
       - { "name": "recent_visit", "value": {"column_name": "last_visited", "type" : "timestamp", "encoding":"MM/dd/yy", "dst_type": "string"}
     }
 - Specify static set name in config file as follows:
@@ -111,7 +111,7 @@ IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
         
           "set": { "column_position":4 , "type": "string"},
         
-          "binlist": [
+          "bin_list": [
             {"name": "age",
              "value": {"column_position": 5, "type" : "integer"}
             },
@@ -165,7 +165,7 @@ IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
         
           "set": { "column_position":4 , "type": "string"},
         
-          "binlist": [
+          "bin_list": [
             
             {
              "name": "name",
@@ -207,7 +207,7 @@ IND## userid5## 08/20/2014## twitter## 37## X10## 583130## 9.3
 
   "set": { "column_position":4 , "type": "string"},
 
-  "binlist": [
+  "bin_list": [
     
     {
      "name": "name",

@@ -4,7 +4,7 @@
 -  1.0: Initial implementation
 -  1.1: Insert system time along with the record.
 
-##Aerospike Loader [2.0] Release Date [....]
+##Aerospike Loader [2.0] Release Date [26 Apr 2017]
 ###New features:
 -   Added Json datatype support (List, Maps can be nested also.)
 -   Added TLS security support
@@ -18,4 +18,8 @@
 -   Deprecated -s (--set) commandline param. Will be passed only by config file.
 -   Deprecated -wt (write-threads), -rt (read-threads) and introduce new option -g defining max throughput for loader.
 -	Changed schema for mapping definitions.
-
+##Aerospike Loader [2.1] Release Date [27 Jun 2017]
+###New features:
+-   None.
+###Fix/Changes:
+-   Fixed config name binlist in docs. Changed binlist to bin_list.
