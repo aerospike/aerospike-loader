@@ -555,7 +555,7 @@ public class AsWriterTask implements Callable<Integer> {
 				+ counters.write.mappingWriteCount.get()
 				+ counters.write.writeErrors.get();
 
-		timeLapse = (counters.write.writeStartTime - System.currentTimeMillis()) / 1000L;
+		timeLapse = (System.currentTimeMillis() - counters.write.writeStartTime) / 1000L;
 
 		if (timeLapse > 0) {
 			throughput = transactions / timeLapse;
