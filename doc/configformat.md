@@ -98,7 +98,7 @@ Following config file maps data file having five columns. If first line of data 
 
 | Keywords          	| Description                                                                                  	| Required/ Optional        	| Value                                                                        	|
 |-------------------	|----------------------------------------------------------------------------------------------	|---------------------------	|------------------------------------------------------------------------------	|
-| delimiter         	| delimiter is used to separate data in each row of data file.                                 	| Optional (default is ',') 	| any string Data part should not contain this delimiter character. 	    |
+| delimiter         	| delimiter is used to separate data in each row of data file. Data file should not contain ':' and ',' as delimiter if file consist any JSON data. Only data inside double quotes (" ") will not be searched for delimiter. Its DSV supported so user can use any good delimiter                                	| Optional (default is ',') 	| any string Data part should not contain this delimiter character. 	    |
 | n_columns_datafile           	| Number of columns in data file.                                                              	| Required                  	| Integer                                                                      	|
 | header_exist 	| This attribute is used to skip first line of data file where header information is present.  	| Required                  	| "true","false".                                                              	|
 

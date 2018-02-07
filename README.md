@@ -1,7 +1,11 @@
 # Aerospike Loader
-> Aerospike Loader parses a set of .DSV files and loads the data into Aerospike server.
+> Aerospike Data Loader can help in migrating data from any other database to
+> Aerospike. User can dump data from different databases in .DSV format and use
+> this tool to parse and load them in Aerospike server. User need to provide
+> .DSV data files to load and aerospike schema file in JSON format. It parse
+> those .DSV files and load data in Aerospike Server according to given schema
+> in schema files.
 
-- [Features](doc/features.md)
 - [Prerequisites](#Prerequisites)
 - [Installation](#Installation)
 - [Dependencies](#Dependencies)
@@ -73,6 +77,12 @@ __Options__:
 ```
 
 For more details, refer to [Options](doc/options.md).
+
+### Some extra info about internal working:
+
+* There are 2 types of threads:
+    * reader threads (reads CSV files) (The number of reader threads = either number of CPUs or number of files in the directory, whichever one is lower.)
+    * writer threads (writes to the cluster) (The number of writer threads = number of CPUs * 5 (5 is scaleFactor))
 
 ### Sample usage of all options:
 
