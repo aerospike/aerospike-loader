@@ -74,6 +74,7 @@ __Options__:
 -uk,--send-user-key             Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
 -u,--usage                      Print usage.
 -v,--verbose                    Verbose mode for debug logging (default: INFO)
+-V,--version                    Print version
 ```
 
 For more details, refer to [Options](doc/options.md).
