@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -108,15 +109,27 @@ public class AerospikeLoad implements Runnable {
 	private static Logger log = Logger.getLogger(AerospikeLoad.class);
 
 
+	private static void printVersion()
+	{
+		final Properties properties = new Properties();
+		try {
+			properties.load(AerospikeLoad.class.getClassLoader().getResourceAsStream("project.properties"));
+		} catch (Exception e) {
+			System.out.println("None");
+		} finally {
+			System.out.println(properties.getProperty("name"));
+			System.out.println("Version " + properties.getProperty("version"));
+		}
+	}
+
 	public static void main(String[] args) throws IOException {
 		long processStart = System.currentTimeMillis();
 
 		AerospikeClient client = null;
 		counters = new Counter();
-		statPrinter = new Thread(new PrintStat(counters));
+		CommandLine cl;
 		
 		try {
-			log.info("Aerospike loader started");
 			Options options = new Options();
 			options.addOption("h", "hosts", true,
 					"List of seed hosts in format:\n" +
@@ -130,6 +143,7 @@ public class AerospikeLoad implements Runnable {
 					"host1:3000,host2:3000\n" + 
 					"192.168.1.10:cert1:3000,[2001::1111]:cert2:3000\n"
 					);
+			options.addOption("V", "version", false, "Aerospike Loader Version");
 			options.addOption("p", "port", true, "Server port (default: 3000)");
 			options.addOption("U", "user", true, "User name");
 			options.addOption("P", "password", true, "Password");
@@ -172,13 +186,27 @@ public class AerospikeLoad implements Runnable {
 			options.addOption("u", "usage", false, "Print usage.");
 
 			CommandLineParser parser = new PosixParser();
-			CommandLine cl = parser.parse(options, args, false);
+			cl = parser.parse(options, args, false);
 	        
 			if (args.length == 0 || cl.hasOption("u")) {
 				printUsage(options);
 				return;
 			}
 
+			if (cl.hasOption("V")) {
+				printVersion();
+				return;
+			}
+		} catch (Exception e) {
+			log.error(e);
+			if (log.isDebugEnabled()) {
+				e.printStackTrace();
+			}
+			return;
+		}
+
+		try {
+			statPrinter = new Thread(new PrintStat(counters));
 			// Create Abstract derived params from provided commandline params.
 			params = Utils.parseParameters(cl);
 			if (params.verbose) {
@@ -206,6 +234,7 @@ public class AerospikeLoad implements Runnable {
 			
 			initBytesToRead(dataFileNames);
 
+			log.info("Aerospike loader started");
 			// Perform main Read Write job.
 			runLoader(client, columnDefinitionFileName, dataFileNames);
 
@@ -678,7 +707,7 @@ public class AerospikeLoad implements Runnable {
 		PrintWriter pw = new PrintWriter(sw);
 		String syntax = AerospikeLoad.class.getName() + " [<options>]";
 		formatter.printHelp(pw, 100, syntax, "options:", options, 0, 2, null);
-		log.info(sw.toString());
+		System.out.print(sw.toString());
 	}
 
 	private static boolean dsvHasHeader() {
