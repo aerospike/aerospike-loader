@@ -9,7 +9,7 @@
 
 			"set": { "column_name":"set" , "type": "string"},
 
-			"binlist": [
+			"bin_list": [
 				{
 					"name": "intDataBin",
    					"value": {"column_name": "intData", "type" : "integer"}

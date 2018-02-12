@@ -1,7 +1,11 @@
-#Aerospike Loader
-> Aerospike Loader parses a set of .DSV files and loads the data into Aerospike server.
+# Aerospike Loader
+> Aerospike Data Loader can help in migrating data from any other database to
+> Aerospike. User can dump data from different databases in .DSV format and use
+> this tool to parse and load them in Aerospike server. User need to provide
+> .DSV data files to load and aerospike schema file in JSON format. It parse
+> those .DSV files and load data in Aerospike Server according to given schema
+> in schema files.
 
-- [Features](doc/features.md)
 - [Prerequisites](#Prerequisites)
 - [Installation](#Installation)
 - [Dependencies](#Dependencies)
@@ -31,7 +35,7 @@
         $ ./build
 
 <a name="Dependencies"></a>
-##Dependencies
+## Dependencies
 Following dependencies are downloaded automatically:
 * Aerospike Java client 3.1.2 or greater
 * Apache commons cli 1.2
@@ -74,7 +78,13 @@ __Options__:
 
 For more details, refer to [Options](doc/options.md).
 
-###Sample usage of all options:
+### Some extra info about internal working:
+
+* There are 2 types of threads:
+    * reader threads (reads CSV files) (The number of reader threads = either number of CPUs or number of files in the directory, whichever one is lower.)
+    * writer threads (writes to the cluster) (The number of writer threads = number of CPUs * 5 (5 is scaleFactor))
+
+### Sample usage of all options:
 
         $ ./run_loader -h nodex -p 3000 -n test -T 3000 -e 2592000 -ec 100 -tz PST -wa update -c ~/pathto/config.json datafiles/
 
@@ -97,6 +107,6 @@ Data Files:                                 datafiles/
 ## Demo example
 Example directory contains two files: allDatatype.json and data.csv. Run the following command to load data from data file data.csv.
 
-    ./run_loader -h localhost -c example/allDatatype.json example/data.csv
+    ./run_loader -h localhost -c example/alldatatype.json example/alldatatype.dsv
 
 For more examples, see the examples/README.md.

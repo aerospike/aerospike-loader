@@ -98,7 +98,8 @@ Following config file maps data file having five columns. If first line of data 
 
 | Keywords          	| Description                                                                                  	| Required/ Optional        	| Value                                                                        	|
 |-------------------	|----------------------------------------------------------------------------------------------	|---------------------------	|------------------------------------------------------------------------------	|
-| delimiter         	| delimiter is used to separate data in each row of data file.                                 	| Optional (default is ',') 	| any string Data part should not contain this delimiter character. 	    |
+| delimiter         	| delimiter is used to separate data in each row of data
+file. Data file should not contain JSON specific char('}', ']', ',', ':'...) as delimiter if file consist any JSON data. Only data inside double quotes (" ") will not be searched for delimiter. Its DSV supported so user can use any good delimiter                                	| Optional (default is ',') 	| any string Data part should not contain this delimiter character. 	    |
 | n_columns_datafile           	| Number of columns in data file.                                                              	| Required                  	| Integer                                                                      	|
 | header_exist 	| This attribute is used to skip first line of data file where header information is present.  	| Required                  	| "true","false".                                                              	|
 
@@ -122,7 +123,7 @@ key is unique and always picked from data file.
 | type                         | Type of key/set. Set name should be string.                                | Require                                        | string          |
 
 <a name="bin_list"></a>
-### bin_list Attributes:
+### Bin_list Attributes:
 "bin_list" contains array of lists. So there is no direct attributes. Each list in bin_list has two attributes one is "name"(name mapping for each bin) and other one is "value"(value mapping for each bin). In following table some sub attributes for "name/value" is described. "name" attribute doesn't have dst_type and encoding attribute, and type is always string. "name/value" can have static/fixed values or we can pick name/value from data file. Length of each bin name should be less than or equal to 14.
 
 | Keywords                     | Description                                                                                                                                                                                    | Required/ Optional                                            | Value            |

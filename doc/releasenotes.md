@@ -1,6 +1,5 @@
 # Release notes:
 
-
 -  1.0: Initial implementation
 -  1.1: Insert system time along with the record.
 
@@ -10,6 +9,7 @@
 -   Added TLS security support
 -	Added mapping section. user can mention any number of mappings in one file. User can add secondary_mapping (used for any column to primary key mapping.) by adding attribute secondary_mapping: 'true'.
 -	Added (-g) (max-throughput) to limit max average throughput of loader.
+
 ### Fix/Changes:
 -   Removed Specific List/Map datatype option as supported type. Json datatype will cover them.
 -   Removed CSV specific options from config file. There will be only DSV support (covers CSV also.)
@@ -18,8 +18,20 @@
 -   Deprecated -s (--set) commandline param. Will be passed only by config file.
 -   Deprecated -wt (write-threads), -rt (read-threads) and introduce new option -g defining max throughput for loader.
 -	Changed schema for mapping definitions.
+
 ## Aerospike Loader [2.1] Release Date [27 Jun 2017]
 ### New features:
--   None.
+-   None
+
 ### Fix/Changes:
--   Fixed config name binlist in docs. Changed binlist to bin_list.
+-   Fixed config-name binlist in docs. Changed to bin_list
+
+## Aerospike Loader [2.2] Release Date [12 Feb 2018]
+### New features:
+-   Added native float support. Earlier float was stored as blob.
+
+### Fix/Changes:
+-   Fixed loading for JSON object. Now JSON object format in datafile will be of Standerd JSON. limitation (JSON specific special char ('[', '{', ',', ':') can't be used as delimiter.)
+-   Fixed tests.
+-   Fix docs related to json spec.
+-   Fix examples for JSON object.

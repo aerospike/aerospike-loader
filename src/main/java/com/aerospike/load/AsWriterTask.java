@@ -433,9 +433,11 @@ public class AsWriterTask implements Callable<Integer> {
 			float binfloat = Float.parseFloat(binRawValue);
 
 			// Floating type data can be stored as 8 byte byte
-			byte[] byteFloat = ByteBuffer.allocate(8).putFloat(binfloat).array();
-
-			return new Bin(binName, byteFloat);
+			//byte[] byteFloat = ByteBuffer.allocate(8).putFloat(binfloat).array();
+			//return new Bin(binName, byteFloat);
+			
+			// Now server support float
+			return new Bin(binName, binfloat);
 
 		} catch (Exception e) {
 			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber
@@ -458,7 +460,9 @@ public class AsWriterTask implements Callable<Integer> {
 			 * Python dump map as "{'a': 'b'}"
 			 * So adapting those convention and replacing (<'> to <">) for java support.
 			 */
-			binRawValue = binRawValue.replace('\'', '"');
+
+			// Data shouldn't be changed
+			//binRawValue = binRawValue.replace('\'', '"');
 
 			if (jsonParser == null) {
 				jsonParser = new JSONParser();
@@ -555,8 +559,10 @@ public class AsWriterTask implements Callable<Integer> {
 				+ counters.write.mappingWriteCount.get()
 				+ counters.write.writeErrors.get();
 
-		timeLapse = (counters.write.writeStartTime - System.currentTimeMillis()) / 1000L;
 
+		//timeLapse = (counters.write.writeStartTime - System.currentTimeMillis()) / 1000L;
+		timeLapse = (System.currentTimeMillis() - counters.write.writeStartTime) / 1000L;
+		
 		if (timeLapse > 0) {
 			throughput = transactions / timeLapse;
 
