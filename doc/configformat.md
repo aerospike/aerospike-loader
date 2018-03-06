@@ -45,6 +45,7 @@ Following config file maps data file having five columns. If first line of data 
                     "value": {
                         "column_name": "lstblob",
                         "type": "blob",
+                        "dst_type": "blob",
                         "encoding" : "hex"
                     }
                 },
@@ -52,8 +53,7 @@ Following config file maps data file having five columns. If first line of data 
                     "name": "age",
                     "value": {
                         "column_name": "name",
-                        "type": "name",
-                        "dst_type": "string",
+                        "type": "string",
                     }
                 }
             ]
@@ -71,7 +71,6 @@ Following config file maps data file having five columns. If first line of data 
                     "value": {
                         "column_name": "key",
                         "type": "integer",
-                        "dst_type": "cdt_list"
                     }
                 }
             ]
@@ -129,7 +128,7 @@ key is unique and always picked from data file.
 |------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|------------------|
 | column_position/ column_name | Column name in header of data file or column position.                                                                                                                                         | Require any one of column_position/ column_name               | integer / string |
 | type                         | Data type of source data. Supported data types are: integer, float, string, blob, timestamp.                                                                                                   | Require                                                       | string           |
-| dst_type                     | Source type data to aerospike type conversion. Supported data types are: integer, string, blob. Timestamp can be stored as integer/string, float is stored as 8 byte encoded byte array(blob). json (nested list, map can be passed.)| Require if source type to destination type conversion needed and for timestamp and blob case. | string           |
+| dst_type                     | Destination data type in Aerospike. Supported data types are: integer, float, string, blob, list, map. For integer, float, string, json source type the implicit dst_type is integer, float, string, list or map respectively. In case of Timestamp dst_type can be integer/string.| Require if source type to destination type conversion needed and for timestamp and blob case. | string           |
 | encoding                     | Encoding format for data conversion from source to destination type. Blob type data  should be hex encoded. Timestamp type data can be encoded as "MM/DD/YYYY" if dst_type is integer.         | Require if dst_type is given                                  | string           |
 
    __Note:__ Specify column_name:"system_time" in config file to insert extra bin in each record with system time at the time of writing stored in it.

@@ -7,10 +7,10 @@
 	  	"set": { "column_name":"set" , "type": "string"},
 	  	"bin_list": [  
 			{"name": "age",
-	     	"value": {"column_name": "age", "type" : "integer", "dst_type": "cdt_list"}
+	     	"value": {"column_name": "age", "type" : "integer"}
 	    	},
 	    	{"name": "name",
-	     	"value": {"column_name": "name", "type" : "String", "dst_type": "cdt_list"}
+	     	"value": {"column_name": "name", "type" : "String"}
 	    	},
 	    	{"name": "locblob",
 	     	"value": {"column_name": "locblob", "type" : "blob", "dst_type" : "blob" , "encoding":"hex"}
@@ -21,7 +21,7 @@
 	  	]
   	},
 	{	
-		"seceondry_mapping" : "true",
+		"secondary_mapping" : "true",
     	"key": {"column_name":"name", "type": "String"},
         "set": "name_map",
 	 	"bin_list": [
@@ -31,7 +31,7 @@
          ]
 	},
 	{
-		"seceondry_mapping" : "true",
+		"secondary_mapping" : "true",
 		"key": {"column_name":"age", "type": "integer"},
      	"set": "age_map",
 	  	"bin_list": [

@@ -429,9 +429,9 @@ public class AerospikeLoad implements Runnable {
 		// Print final statistic of aerospike-loader.
 		log.info("Final Statistics of importer: ("
 				+ "Records Read = " + counters.write.readCount.get() + ", "
-				+ "Succesfull Writes = " + counters.write.writeCount.get() + ", "
-				+ "Succesfull Primary Writes = " + (counters.write.writeCount.get() - counters.write.mappingWriteCount.get()) + ", "
-				+ "Succesfull Mapping Writes = " + counters.write.mappingWriteCount.get() + ", "
+				+ "Successful Writes = " + counters.write.writeCount.get() + ", "
+				+ "Successful Primary Writes = " + (counters.write.writeCount.get() - counters.write.mappingWriteCount.get()) + ", "
+				+ "Successful Mapping Writes = " + counters.write.mappingWriteCount.get() + ", "
 				+ "Errors = " + (counters.write.writeErrors.get() + counters.write.readErrors.get() + counters.write.processingErrors.get())
 				+ "(" + (counters.write.writeErrors.get()) + "-Write," + counters.write.readErrors.get() + "-Read,"
 				+ counters.write.processingErrors.get() + "-Processing), " + "Skipped = "
@@ -707,7 +707,7 @@ public class AerospikeLoad implements Runnable {
 		PrintWriter pw = new PrintWriter(sw);
 		String syntax = AerospikeLoad.class.getName() + " [<options>]";
 		formatter.printHelp(pw, 100, syntax, "options:", options, 0, 2, null);
-		System.out.print(sw.toString());
+		log.info(sw.toString());
 	}
 
 	private static boolean dsvHasHeader() {

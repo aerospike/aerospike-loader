@@ -137,9 +137,9 @@ public class AsWriterTask implements Callable<Integer> {
 				counters.write.mappingWriteCount.getAndIncrement();
 			} else {
 				this.client.put(this.params.writePolicy, key, bins.toArray(new Bin[bins.size()]));
-				counters.write.writeCount.getAndIncrement();
 				counters.write.bytesProcessed.addAndGet(this.lineSize);
 			}
+			counters.write.writeCount.getAndIncrement();
 			
 			log.trace("Wrote line " + lineNumber + " Key: " + key.userKey + " to Aerospike.");
 
@@ -432,10 +432,6 @@ public class AsWriterTask implements Callable<Integer> {
 		try {
 			float binfloat = Float.parseFloat(binRawValue);
 
-			// Floating type data can be stored as 8 byte byte
-			//byte[] byteFloat = ByteBuffer.allocate(8).putFloat(binfloat).array();
-			//return new Bin(binName, byteFloat);
-			
 			// Now server support float
 			return new Bin(binName, binfloat);
 
@@ -455,14 +451,6 @@ public class AsWriterTask implements Callable<Integer> {
 
 		try {
 			log.debug(binRawValue);
-			/*
-			 * Python dump list as "['a', 'b', 'c']"
-			 * Python dump map as "{'a': 'b'}"
-			 * So adapting those convention and replacing (<'> to <">) for java support.
-			 */
-
-			// Data shouldn't be changed
-			//binRawValue = binRawValue.replace('\'', '"');
 
 			if (jsonParser == null) {
 				jsonParser = new JSONParser();
@@ -560,7 +548,6 @@ public class AsWriterTask implements Callable<Integer> {
 				+ counters.write.writeErrors.get();
 
 
-		//timeLapse = (counters.write.writeStartTime - System.currentTimeMillis()) / 1000L;
 		timeLapse = (System.currentTimeMillis() - counters.write.writeStartTime) / 1000L;
 		
 		if (timeLapse > 0) {
