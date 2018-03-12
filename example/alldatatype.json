@@ -1,7 +1,7 @@
 {
   	"version" : "2.0",
   	"input_type" : "dsv",
-  	"dsv_config": { "delimiter": "##" , "n_columns_datafile": 9, "header_exist": true},
+  	"dsv_config": { "delimiter": "##" , "n_columns_datafile": 10, "header_exist": true},
 
 	"mappings": [
   		{
@@ -18,7 +18,7 @@
 			    	"name": "floatDataBin",
 			     	"value": {"column_name": "floatData", "type" : "float"}
 			    },
-			        {
+			    {
 			    	"name": "stringDataBin",
 			     	"value": {"column_name": "stringData", "type" : "string"}
 			    },
@@ -37,6 +37,10 @@
 			    {
 			    	"name": "blobDataBin",
 			    	"value": {"column_name": "blobData", "type" : "blob", "dst_type": "blob", "encoding":"hex"}
+			    },
+			    {
+			    	"name": "geoDataBin",
+			    	"value": {"column_name": "geoData", "type" : "geojson"}
 			    },
 	    		{
     				"name": "timestamp",

@@ -26,14 +26,14 @@ package com.aerospike.load;
  *
  */
 enum SrcColumnType {
-	INTEGER, STRING, BLOB, JSON, TIMESTAMP, FLOAT;
+	INTEGER, STRING, BLOB, GEOJSON, JSON, TIMESTAMP, FLOAT;
 }
 /**
  * List of datatypes supported by Aerospike
  *
  */
 enum DstColumnType {
-	INTEGER, STRING, BLOB, LIST, MAP;
+	INTEGER, STRING, BLOB, LIST, MAP, GEOJSON;
 }
 
 /**
@@ -79,6 +79,8 @@ public class ColumnDefinition {
 			this.srcType = SrcColumnType.INTEGER;
 		} else if ("blob".equalsIgnoreCase(type)) {
 			this.srcType = SrcColumnType.BLOB;
+		} else if ("geojson".equalsIgnoreCase(type)) {
+			this.srcType = SrcColumnType.GEOJSON;
 		} else if ("json".equalsIgnoreCase(type)) {
 			this.srcType = SrcColumnType.JSON;
 		} else if ("timestamp".equalsIgnoreCase(type)) {
@@ -99,6 +101,8 @@ public class ColumnDefinition {
 			this.dstType = DstColumnType.LIST;
 		} else if ("map".equalsIgnoreCase(type)) {
 			this.dstType = DstColumnType.MAP;
+		} else if ("geojson".equalsIgnoreCase(type)) {
+			this.dstType = DstColumnType.GEOJSON;
 		}
 	}
 	@Override

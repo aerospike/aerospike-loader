@@ -42,6 +42,7 @@ import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
+import com.aerospike.client.Value;
 import com.aerospike.client.ResultCode;
 
 /**
@@ -367,6 +368,9 @@ public class AsWriterTask implements Callable<Integer> {
 						 */
 						bin = createBinForJson(binName, binRawValue);
 						break;
+					case GEOJSON:
+						bin = createBinForGeoJson(binName, binRawValue);
+						break;
 					case BLOB:
 						bin = createBinForBlob(binColumn, binName, binRawValue);
 						break;
@@ -448,7 +452,6 @@ public class AsWriterTask implements Callable<Integer> {
 	}
 	
 	private Bin createBinForJson(String binName, String binRawValue) {
-
 		try {
 			log.debug(binRawValue);
 
@@ -472,7 +475,17 @@ public class AsWriterTask implements Callable<Integer> {
 		}
 
 	}
-
+	
+	private Bin createBinForGeoJson(String binName, String binRawValue) {
+		try {
+			return new Bin(binName, Value.getAsGeoJSON(binRawValue));
+		} catch (Exception e) {
+			log.error("File: " + Utils.getFileName(this.fileName) + " Line: " + lineNumber
+					+ " GeoJson Parse Error: " + e);
+			return null;
+		}
+	}
+	
 	private Bin createBinForBlob(BinDefinition binColumn, String binName, String binRawValue) {
 		try {
 			if ((binColumn.valueDef.dstType.equals(DstColumnType.BLOB))

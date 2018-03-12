@@ -35,3 +35,12 @@
 -   Fixed tests.
 -   Fix docs related to json spec.
 -   Fix examples for JSON object.
+
+## Aerospike Loader [2.3] Release Date [12 Mar 2018]
+### New features:
+-   Added GeoJson support.
+
+### Fix/Changes:
+-   Fixed data upload counters.
+-   Fix docs related to json/geojson spec.
+-   Fix examples for GeoJSON object.

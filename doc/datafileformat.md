@@ -18,7 +18,8 @@ In the above sample data file first row is the header information for each colum
 - String  : String type data. E.g. "Aerospike"
 - Blob    : Binary fields which is hex encoded is stored as blobs. E.g. hex encoded "abc" as 616263.
 - Timestamp: Timestamp type data stored as string or integer. E.g. "1-1-1970" as string stored as "1-1-1970" but as integer stored as -19800 seconds(negative because its calculated reference to UTC timezone). 
-- Json    : Any standard JSON doc. (List, map will also go as JSON.). E.g. List: ["a", "b", ["c", "d"]], Map: {"a": "b", "c": {"d", "e"}}. 
+- Json    : Any standard JSON doc. (List, map will also go as JSON.). E.g. List: ["a", "b", ["c", "d"]], Map: {"a": "b", "c": {"d", "e"}}.
+- GeoJson : Aerospike support GeoJson datatype natively. It can be stored in its standard format. E.g. {"type": "Point", "coordinates": [123.4, -456.7]}
  
 > **Note**: Data file should not contain JSON specific char('}', ']', ',', ':'...) as delimiter if file consist any JSON data. Only data inside double quotes (" ") will not be searched for delimiter. Its DSV supported so user can use any good delimiter.
  
