@@ -68,7 +68,6 @@ public class Parameters {
 	public String toString() {
 		return "Parameters:[ hosts=" + this.hosts + 
 				", ns=" + this.namespace + 
-				", timeout=" + this.writePolicy.timeout +
 				", maxThroughput=" + this.maxThroughput +
 				", write-action=" + this.writePolicy.recordExistsAction.toString() +
 				", timeZoneOffset=" + this.timeZoneOffset +
