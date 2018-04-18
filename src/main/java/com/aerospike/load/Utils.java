@@ -127,7 +127,7 @@ public class Utils {
 
 		WritePolicy writePolicy = new WritePolicy();
 		writePolicy.recordExistsAction = RecordExistsAction.valueOf(writeAction.toUpperCase());
-		writePolicy.timeout = timeout_int;
+		writePolicy.setTimeout(timeout_int);
 		writePolicy.expiration = ttl;
 		writePolicy.sendKey = sendKey;
 
