@@ -30,6 +30,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -47,6 +48,7 @@ import org.apache.log4j.Logger;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.admin.Role;
 import com.aerospike.client.AerospikeException;
+import com.aerospike.client.policy.AuthMode;
 import com.aerospike.client.policy.ClientPolicy;
 import com.aerospike.client.policy.TlsPolicy;
 import com.aerospike.client.util.Util;
@@ -170,11 +172,15 @@ public class AerospikeLoad implements Runnable {
 					"Values:  cipher names defined by JVM separated by comma\n" +
 					"Default: null (default cipher list provided by JVM)"
 					);
-			options.addOption("tr", "tls-revoke", true, 
+			options.addOption("tr", "tlsRevoke", true, 
 					"Revoke certificates identified by their serial number\n" +
 					"Values:  serial numbers separated by comma\n" +
 					"Default: null (Do not revoke certificates)"
 					);
+
+			options.addOption("tlsLoginOnly", false, "Use TLS/SSL sockets on node login only");
+			options.addOption("auth", true, "Authentication mode. Values: " + Arrays.toString(AuthMode.values()));
+
 			options.addOption("uk", "send-user-key", false, 
 					"Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)"
 					);
@@ -277,6 +283,10 @@ public class AerospikeLoad implements Runnable {
 	}
 
 	private static void initClientPolicy(CommandLine cl, ClientPolicy clientPolicy) {
+
+		if (cl.hasOption("auth")) {
+			clientPolicy.authMode = AuthMode.valueOf(cl.getOptionValue("auth", ""));
+		}				
 		// Setting user, password in client policy.
 		clientPolicy.user = cl.getOptionValue("user");
 		clientPolicy.password = cl.getOptionValue("password");
