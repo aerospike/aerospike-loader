@@ -285,7 +285,7 @@ public class AerospikeLoad implements Runnable {
 	private static void initClientPolicy(CommandLine cl, ClientPolicy clientPolicy) {
 
 		if (cl.hasOption("auth")) {
-			clientPolicy.authMode = AuthMode.valueOf(cl.getOptionValue("auth", ""));
+			clientPolicy.authMode = AuthMode.valueOf(cl.getOptionValue("auth", "").toUpperCase());
 		}				
 		// Setting user, password in client policy.
 		clientPolicy.user = cl.getOptionValue("user");
