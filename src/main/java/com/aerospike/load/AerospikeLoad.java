@@ -42,8 +42,10 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.admin.Role;
@@ -107,7 +109,7 @@ public class AerospikeLoad implements Runnable {
 	private static HashMap<String, String>	dsvConfigs;
 	private static List<MappingDefinition>	mappingDefs;
 
-	private static Logger log = Logger.getLogger(AerospikeLoad.class);
+	private static Logger log = LogManager.getLogger(AerospikeLoad.class);
 
 
 	private static void printVersion()
@@ -212,7 +214,7 @@ public class AerospikeLoad implements Runnable {
 			// Create Abstract derived params from provided commandline params.
 			params = Utils.parseParameters(cl);
 			if (params.verbose) {
-				log.setLevel(Level.DEBUG);
+				Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.DEBUG);
 			}
 			
 			// Get and validate user roles for client.
@@ -380,7 +382,6 @@ public class AerospikeLoad implements Runnable {
 		dsvConfigs = new HashMap<String, String>();
 		mappingDefs = new ArrayList<MappingDefinition>();
 		
-		Parser.setLogLevel(params.verbose);
 		if (Parser.parseJSONColumnDefinitions(columnDefinitionFile, dsvConfigs, mappingDefs)) {
 			log.info("Config file processed.");
 		} else {

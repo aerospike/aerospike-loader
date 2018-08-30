@@ -24,14 +24,17 @@ package com.aerospike.load;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+
 
 /**
  * Prints Progress of Aerospike-Loader
  *
  */
 public class PrintStat implements Runnable{
-	private static Logger	log = Logger.getLogger(PrintStat.class);
+	private static Logger	log = LogManager.getLogger(PrintStat.class);
 	private static final SimpleDateFormat SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
 	private Counter counters;

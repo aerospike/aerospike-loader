@@ -22,7 +22,6 @@
 
 package com.aerospike.load;
 
-import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,8 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -71,7 +70,7 @@ public class AsWriterTask implements Callable<Integer> {
 	private Counter counters;
 	private JSONParser jsonParser;
 
-	private static Logger log = Logger.getLogger(AsWriterTask.class);
+	private static Logger log = LogManager.getLogger(AsWriterTask.class);
 
 	/**
 	 * AsWriterTask process given data columns for a record and create Set and Key and Bins.
@@ -104,10 +103,6 @@ public class AsWriterTask implements Callable<Integer> {
 		this.columns = columns;
 
 		this.params = params;
-		if (params.verbose) {
-			log.setLevel(Level.DEBUG);
-		}
-
 		this.counters = counters;
 
 	}

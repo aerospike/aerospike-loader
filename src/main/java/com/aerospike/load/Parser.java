@@ -30,8 +30,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -42,14 +42,7 @@ import org.json.simple.parser.ParseException;
  *
  */
 public class Parser {
-	private static Logger log = Logger.getLogger(Parser.class);
-	
-	
-	public static void setLogLevel(boolean verbose) {
-		if (verbose) {
-			log.setLevel(Level.DEBUG);
-		}
-	}
+	private static Logger log = LogManager.getLogger(Parser.class);
 
 	/**
 	 * Process column definitions in JSON formated file and create two lists for metadata and
