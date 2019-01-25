@@ -20,8 +20,8 @@
 
 <a name="Prerequisites"></a>
 ## Prerequisites
-* Java 1.6 or higher
-* Maven 2.3.2
+* Java 1.8 or greater
+* Maven 3.0 or greater
 
 <a name="Installation"></a>
 ## Installation
@@ -37,7 +37,7 @@
 <a name="Dependencies"></a>
 ## Dependencies
 Following dependencies are downloaded automatically:
-* Aerospike Java client 3.1.2 or greater
+* Aerospike Java client 4.3.0 or greater
 * Apache commons cli 1.2
 * Log4j 2.11.1
 * Junit 4.4
