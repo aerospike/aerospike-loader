@@ -75,7 +75,7 @@ import com.aerospike.client.util.Util;
  * -ec,--abort-Error-Count<arg>		Abort when error occurs more than this value(default: 0(don't abort))
  * -wa,--write-Action <arg>			Write action if key already exists (default: update)
  * -tls,--tls-enable                Use TLS/SSL sockets(default: False)
- * -tp,--tls-protocols              Allow TLS protocols. Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
+ * -tp,--tls-protocols              Allow TLS protocols. Values:  TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
  * -tlsCiphers,--tls-cipher-suite   Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
  * -tr,--tls-revoke                 Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
  * -uk,--send-user-key              Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
@@ -166,7 +166,7 @@ public class AerospikeLoad implements Runnable {
 			options.addOption("tls", "tls-enable", false, "Use TLS/SSL sockets");
 			options.addOption("tp", "tls-protocols", true, 
 					"Allow TLS protocols\n" +
-					"Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma\n" +
+					"Values:  TLSv1,TLSv1.1,TLSv1.2 separated by comma\n" +
 					"Default: TLSv1.2"
 					);
 			options.addOption("tlsCiphers", "tls-cipher-suite", true, 

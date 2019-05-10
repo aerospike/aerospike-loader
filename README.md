@@ -67,7 +67,7 @@ __Options__:
 -ec,--abort-Error-Count<arg>    Abort when error occurs more than this value (default: 0 (don`t abort))
 -wa,--write-Action <arg>        Write action if key already exists (default: update)
 -tls,--tls-enable               Use TLS/SSL sockets(default: False)
--tp,--tls-protocols             Allow TLS protocols. Values:  SSLv3,TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
+-tp,--tls-protocols             Allow TLS protocols. Values:  TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
 -tlsCiphers,--tls-cipher-suite  Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
 -tr,--tls-revoke                Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
 -te,--tls-encrypt-only          Enable TLS encryption and disable TLS certificate validation
