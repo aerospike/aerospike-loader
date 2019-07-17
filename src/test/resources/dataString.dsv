@@ -1,4 +1,4 @@
-set,key,strData
+set,key,stringData
 set1,key1,str1
 set2,key2,str2
 set3,key3,str3

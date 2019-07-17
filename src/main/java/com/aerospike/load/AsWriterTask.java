@@ -24,10 +24,7 @@ package com.aerospike.load;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import org.apache.logging.log4j.LogManager;
@@ -295,24 +292,28 @@ public class AsWriterTask implements Callable<Integer> {
 		Key key = null;
 
 		MetaDefinition keyColumn = this.mappingDef.keyColumnDef;
-		
-		String keyRawText = this.columns.get(keyColumn.nameDef.columnPos);
-		
-		if (keyRawText == null || keyRawText.trim().length() == 0) {
-			counters.write.keyNullSkipped.getAndIncrement();
-			throw new Exception("Key value is null in datafile.");
-		}
+		if(keyColumn!=null) {
 
-		if ((keyColumn.nameDef.removePrefix != null)
-				&& (keyRawText.startsWith(keyColumn.nameDef.removePrefix))) {
-			keyRawText = keyRawText.substring(keyColumn.nameDef.removePrefix.length());
-		}
+			String keyRawText = this.columns.get(keyColumn.nameDef.columnPos);
 
-		if (keyColumn.nameDef.srcType == SrcColumnType.INTEGER) {
-			Long integer = Long.parseLong(keyRawText);
-			key = new Key(namespace, set, integer);
-		} else {
-			key = new Key(namespace, set, keyRawText);
+			if (keyRawText == null || keyRawText.trim().length() == 0) {
+				counters.write.keyNullSkipped.getAndIncrement();
+				throw new Exception("Key value is null in datafile.");
+			}
+
+			if ((keyColumn.nameDef.removePrefix != null)
+					&& (keyRawText.startsWith(keyColumn.nameDef.removePrefix))) {
+				keyRawText = keyRawText.substring(keyColumn.nameDef.removePrefix.length());
+			}
+
+			if (keyColumn.nameDef.srcType == SrcColumnType.INTEGER) {
+				Long integer = Long.parseLong(keyRawText);
+				key = new Key(namespace, set, integer);
+			} else {
+				key = new Key(namespace, set, keyRawText);
+			}
+		}else {
+			key=new Key(namespace,set, UUID.randomUUID().toString());
 		}
 
 		return key;

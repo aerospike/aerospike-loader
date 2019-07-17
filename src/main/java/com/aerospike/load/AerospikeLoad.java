@@ -555,9 +555,10 @@ public class AerospikeLoad implements Runnable {
 
 			// KEY
 			if (mappingDef.keyColumnDef == null) {
-				throw new Exception ("Mapping definition without key mapping");	
+				log.warn ("Mapping definition without key mapping. UUID Key will be ingested with every record");
+			}else {
+				updateColumnInfo(mappingDef.keyColumnDef.nameDef, columnNames);
 			}
-			updateColumnInfo(mappingDef.keyColumnDef.nameDef, columnNames);
 
 			// SET
 			if (mappingDef.setColumnDef.staticName == null) {
@@ -641,13 +642,16 @@ public class AerospikeLoad implements Runnable {
 	}
 
 	private static void validateKeyNameInfo(MetaDefinition metadataColDef) throws Exception {
-		
-		if (metadataColDef.nameDef.columnPos < 0 && (metadataColDef.nameDef.columnName == null)) {
-			throw new Exception("Information missing(columnName, columnPos) in config file: " + metadataColDef);
-		}
+		if(metadataColDef!=null) {
 
-		if (metadataColDef.nameDef.srcType == null) {
-			throw new Exception("Source data type is not properly mentioned: " + metadataColDef);
+			if (metadataColDef.nameDef.columnPos < 0 && (metadataColDef.nameDef.columnName == null)) {
+				throw new Exception("Information missing(columnName, columnPos) in config file: " + metadataColDef);
+			}
+
+			if (metadataColDef.nameDef.srcType == null) {
+				throw new Exception("Source data type is not properly mentioned: " + metadataColDef);
+			}
+
 		}
 	}
 
