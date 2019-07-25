@@ -1,0 +1,13 @@
+name: aerospike-loader
+
+container:
+  - base:
+      - docker.qe.aerospike.com/build/aerospike-client-java:openjdk-8
+
+build:
+  - name: build
+    script:
+      - mvn package -f pom.xml -DskipTests
+    artifact:
+      - target/aerospike-load-*-jar-with-dependencies.jar
+
