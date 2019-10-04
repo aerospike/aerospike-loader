@@ -544,8 +544,6 @@ public class AerospikeLoad implements Runnable {
 
 		if (dsvHasHeader()) {
 			columnDef.columnName = columnNames.get(columnDef.columnPos);
-		} else {
-			throw new Exception("Column position defined for data file without header !!");
 		}
 	}
 
@@ -585,7 +583,7 @@ public class AerospikeLoad implements Runnable {
 					if (binColumnDef.valueDef != null) {
 
 						// SYSTEM_TIME is reserved column value
-						if (binColumnDef.valueDef.columnName.toLowerCase().equals(Constants.SYSTEM_TIME)) {
+						if (binColumnDef.valueDef.columnName != null && binColumnDef.valueDef.columnName.toLowerCase().equals(Constants.SYSTEM_TIME)) {
 							continue;
 						}
 						updateColumnInfo(binColumnDef.valueDef, columnNames);
