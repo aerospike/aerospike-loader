@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.aerospike</groupId>
 	<artifactId>aerospike-load</artifactId>
-	<version>2.3.4</version>
+	<version>2.3.5</version>
 	<name>Aerospike DSV Loader</name>
 	<packaging>jar</packaging>
 
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>com.aerospike</groupId>
 			<artifactId>aerospike-client</artifactId>
-			<version>4.4.10</version>
+			<version>4.4.11</version>
 		</dependency>
 		<!-- Apache command line parser. -->
 		<dependency>
