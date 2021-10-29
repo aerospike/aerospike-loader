@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Java Aerospike-import Script.
 #
 # Build with maven before running this script.
