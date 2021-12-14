@@ -44,3 +44,11 @@
 -   Fixed data upload counters.
 -   Fix docs related to json/geojson spec.
 -   Fix examples for GeoJSON object.
+
+## Aerospike Loader [2.4] Release Date [19 Oct 2021]
+### New features:
+-   Add shebang to run_loader script to allow execution from non-bash based shells.
+
+## Aerospike Loader [2.4.1] Release Date [13 Dec 2021]
+### Fix/Changes:
+-   Update log4j to version 2.15.0.
