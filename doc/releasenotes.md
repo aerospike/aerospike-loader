@@ -52,3 +52,11 @@
 ## Aerospike Loader [2.4.1] Release Date [13 Dec 2021]
 ### Fix/Changes:
 -   Update log4j to version 2.15.0.
+
+## Aerospike Loader [2.4.2] Release Date [16 Dec 2021]
+### Fix/Changes:
+-   Update log4j to version 2.16.0.
+
+## Aerospike Loader [2.4.3] Release Date [4 Jan 2022]
+### Fix/Changes:
+-   Update log4j to version 2.17.1.
