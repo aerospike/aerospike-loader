@@ -138,7 +138,12 @@ public class Utils {
 			verbose = true;
 		}
 
-		return new Parameters(hosts, namespace, writePolicy, maxThroughput, timeZoneOffset, abortErrorCount, verbose);
+		boolean unorderdMaps = false;
+		if (cl.hasOption("um")) {
+			unorderdMaps = true;
+		}
+
+		return new Parameters(hosts, namespace, writePolicy, maxThroughput, timeZoneOffset, abortErrorCount, verbose, unorderdMaps);
 	}
 
 	/**

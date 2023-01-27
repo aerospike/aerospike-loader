@@ -35,6 +35,7 @@ public class Parameters {
 	long timeZoneOffset;
 	int abortErrorCount;
 	boolean verbose;
+	boolean unorderdMaps;
 	
 	/**
 	 * Set parameters from commandline argument. 
@@ -45,6 +46,7 @@ public class Parameters {
 	 * @param timeZoneOffset
 	 * @param abortAtError
 	 * @param verbose
+	 * @param unorderdMaps
 	 */
 	protected Parameters(
 			Host[] hosts,
@@ -53,7 +55,8 @@ public class Parameters {
 			long maxThroughput,
 			long timeZoneOffset,
 			int abortErrorCount,
-			boolean verbose
+			boolean verbose,
+			boolean unorderdMaps
 			) {
 		this.hosts = hosts;
 		this.namespace = namespace;
@@ -62,6 +65,7 @@ public class Parameters {
 		this.timeZoneOffset = timeZoneOffset;
 		this.abortErrorCount = abortErrorCount;
 		this.verbose = verbose;
+		this.unorderdMaps = unorderdMaps;
 	}
 
 	@Override
@@ -71,6 +75,8 @@ public class Parameters {
 				", maxThroughput=" + this.maxThroughput +
 				", write-action=" + this.writePolicy.recordExistsAction.toString() +
 				", timeZoneOffset=" + this.timeZoneOffset +
-				", abortErrorCount=" + this.abortErrorCount + "]";
+				", abortErrorCount=" + this.abortErrorCount + 
+				", verbose=" + this.verbose + 
+				", unorderdMaps=" + this.unorderdMaps + "]";
 	}
 }

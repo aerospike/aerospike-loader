@@ -1,9 +1,9 @@
 set##key##intData##floatData##stringData##listData##mapData##dateData##blobData##geoData
-set1##key1##11##1.9##string1##["a","b", ["c", "d"]]##{"a": {"b": "c"}}##01/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.4, -456.7]}
-set2##key2##12##4.5##string2##["d","e", ["c", "d"]]##{"c": {"b": "c"}}##02/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.5, -456.7]}
-set3##key3##13##3.6##string3##["a","b", ["c", "d"]]##{"a": {"b": "c"}}##03/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.6, -456.7]}
-set4##key4##14##5.6##string4##["d","e", ["c", "d"]]##{"c": {"b": "c"}}##04/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.7, -436.7]}
-set5##key5##15##8.3##string5##["a","b", ["c", "d"]]##{"a": {"b": "c"}}##05/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.8, -556.7]}
-set6##key6##16##3.0##string6##["d","e", ["c", "d"]]##{"c": {"b": "c"}}##06/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.4, -476.7]}
-set7##key7##17##6.9##string7##["a","b", ["c", "d"]]##{"a": {"b": "c"}}##07/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [133.4, -256.7]}
-set8##key8##18##0.2##string8##["d","b", ["c", "d"]]##{"c": {"b": "c"}}##08/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [143.4, -756.7]}
+set1##key1##11##1.9##string1##["a","b", ["c", "d"]]##{"a": {"b": "c"}}##01/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.4, -45.7]}
+set2##key2##12##4.5##string2##["d","e", ["c", "d"]]##{"c": {"b": "c"}}##02/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.5, -45.7]}
+set3##key3##13##3.6##string3##["a","b", ["c", "d"]]##{"a": {"b": "c"}}##03/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.6, -45.7]}
+set4##key4##14##5.6##string4##["d","e", ["c", "d"]]##{"c": {"b": "c"}}##04/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.7, -43.7]}
+set5##key5##15##8.3##string5##["a","b", ["c", "d"]]##{"a": {"b": "c"}}##05/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.8, -55.7]}
+set6##key6##16##3.0##string6##["d","e", ["c", "d"]]##{"c": {"b": "c"}}##06/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [123.4, -47.7]}
+set7##key7##17##6.9##string7##["a","b", ["c", "d"]]##{"a": {"b": "c"}}##07/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [133.4, -25.7]}
+set8##key8##18##0.2##string8##["d","b", ["c", "d"]]##{"c": {"b": "c"}}##08/16/2011##6c6f63626c6f623830##{"type": "Point", "coordinates": [143.4, -75.7]}

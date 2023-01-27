@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.SortedMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +34,14 @@ import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
+import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
+import com.aerospike.client.Value;
 import com.aerospike.client.policy.Policy;
-
+import com.aerospike.client.cdt.ListOperation;
+import com.aerospike.client.cdt.MapOperation;
+import com.aerospike.client.cdt.MapOrder;
+import com.aerospike.client.cdt.MapReturnType;
 import com.aerospike.load.Parser;
 
 enum BinType {
@@ -53,6 +59,7 @@ public class DataTypeTest {
 	String port = "3000";
 	String ns = "test";
 	String set = null;
+	MapOrder expectedMapOrder = MapOrder.KEY_ORDERED;
 	//String config = "src/test/resources/allDatatypeCsv.json";
 	String error_count = "0";
 	String write_action = "update";
@@ -434,6 +441,40 @@ public class DataTypeTest {
 		System.out.println("Test static BinName: Complete");
 	}
 
+	//Validate map sort order
+	@Test
+	public void testValidateMapOrder() throws Exception {
+		System.out.println("TestValidateMapOrder: start");
+		if(!client.isConnected()) {
+			System.out.println("Client is not able to connect:" + host + ":" + port);
+			return;
+		}
+		
+		// Create datafile
+
+		HashMap<String, String> binMap = (HashMap<String, String>) testSchema.get("test_map");
+
+		
+		int setMod = 5, range = 100, seed = 10, nrecords = 10;
+		dataFile = rootDir + "dataMap.dsv";
+		writeDataMap(dataFile, nrecords, setMod, range, seed, binMap);
+		
+		// Run Aerospike loader
+		this.expectedMapOrder = MapOrder.UNORDERED;
+		AerospikeLoad.main(new String[]{"-h", host,"-p", port,"-n", ns, "-ec", error_count,"-wa", write_action, "-um", "-c", "src/test/resources/configMap.json", dataFile});
+		
+		// Validate loaded data
+		String dstType = "map";
+		boolean dataValid = validateMap(client, dataFile, nrecords, setMod, range, seed, binMap, dstType);
+		boolean error = getError(log);
+
+		assertTrue(dataValid);
+		assertTrue(!error);
+		this.expectedMapOrder = MapOrder.KEY_ORDERED;
+
+		System.out.println("TestValidateMap: Complete");
+	}
+
 	// Helper functions
 	public void writeDataMap(String fileName, int nrecords, int setMod, int range, int seed,
 			HashMap<String, String> binMap) {
@@ -595,14 +636,28 @@ public class DataTypeTest {
 			expected = bin.value.toString().replace("'", "");
 			expected = expected.replace("\"", "");
 
-		} else if (dstType != null && (dstType.equalsIgnoreCase("map")
-				|| dstType.equalsIgnoreCase("json"))) {
-			System.out.println(String.format("Currently json and map can not be matched."));
+		} else if (dstType != null && (dstType.equalsIgnoreCase("json"))) {
+			System.out.println(String.format("Currently json can not be matched."));
 
 			//received = received.toString().replace("=", ":");
 			//expected = bin.value.toString().replace("'", "");
 			//expected = expected.replace("\"", "");
+
 			return true;
+		} else if (dstType != null && (dstType.equalsIgnoreCase("map"))) {
+			System.out.println(String.format("Currently only map order is checked."));
+
+			//received = received.toString().replace("=", ":");
+			//expected = bin.value.toString().replace("'", "");
+			//expected = expected.replace("\"", "");
+
+			MapOrder mapOrder = (received instanceof SortedMap<?,?>)? MapOrder.KEY_ORDERED : MapOrder.UNORDERED;
+
+			if (mapOrder == this.expectedMapOrder) {
+				return true;
+			}
+
+			return false;
 		} else {
 			expected = bin.value.toString();
 		}
@@ -678,7 +733,8 @@ public class DataTypeTest {
 			value = "[\"a\", \"b\", \"c\", [\"d\", \"e\"]]";
 			break;
 		case MAP:
-			value = "{\"a\":\"b\", \"b\":\"c\", \"c\":{\"d\":\"e\"}}";
+			value = "{\"a\":\"b\", \"c\":{\"e\":\"d\"}, \"b\":\"c\"}";
+			// sorted value should be "{\"a\":\"b\", \"b\":\"c\", \"c\":{\"d\":\"e\"}}";
 			break;
 		case STRING:
 			if (binName.equalsIgnoreCase("utf8")) {

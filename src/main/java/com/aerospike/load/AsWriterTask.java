@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
 import org.apache.logging.log4j.LogManager;
@@ -461,7 +462,14 @@ public class AsWriterTask implements Callable<Integer> {
 				return new Bin(binName, jsonArray);
 			} else {
 				JSONObject jsonObj = (JSONObject) obj;
-				return  new Bin(binName, jsonObj);
+
+				if (this.params.unorderdMaps) {
+					return  new Bin(binName, jsonObj);
+				}
+
+				TreeMap<?,?> sortedMap = new TreeMap<>();
+				sortedMap.putAll(jsonObj);
+				return  new Bin(binName, sortedMap);
 			}
 
 		} catch (ParseException e) {
