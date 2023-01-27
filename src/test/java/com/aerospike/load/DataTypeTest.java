@@ -34,15 +34,9 @@ import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.Bin;
 import com.aerospike.client.Key;
-import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
-import com.aerospike.client.Value;
 import com.aerospike.client.policy.Policy;
-import com.aerospike.client.cdt.ListOperation;
-import com.aerospike.client.cdt.MapOperation;
 import com.aerospike.client.cdt.MapOrder;
-import com.aerospike.client.cdt.MapReturnType;
-import com.aerospike.load.Parser;
 
 enum BinType {
 	INTEGER, STRING, BLOB, LIST, MAP, JSON, TIMESTAMP;
