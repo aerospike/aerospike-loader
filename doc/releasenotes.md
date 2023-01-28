@@ -60,3 +60,10 @@
 ## Aerospike Loader [2.4.3] Release Date [4 Jan 2022]
 ### Fix/Changes:
 -   Update log4j to version 2.17.1.
+
+## Aerospike Loader [3.0.0] Release Date [27 Jan 2023]
+### Breaking Changes:
+-   Upgrade Aerospike Java client to 6.1.6 which is only compatible with Aerospike server 4.9 or newer.
+-   Write key ordered maps by default.
+### New features:
+-   Add -um/--unorderedMaps flags to force writing unordered maps.

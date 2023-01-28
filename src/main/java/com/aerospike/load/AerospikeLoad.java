@@ -81,6 +81,7 @@ import com.aerospike.client.util.Util;
  * -uk,--send-user-key              Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
  * -u,--usage           			Print usage.
  * -v,--verbose						Verbose mode for debug logging (default: INFO)
+ * -um,--unordered-map				Write maps as unorderd (default: false)
  * The file names can be a series of file names or directories. 
  *
  * @author Aerospike
@@ -187,6 +188,7 @@ public class AerospikeLoad implements Runnable {
 					"Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)"
 					);
 			options.addOption("v", "verbose", false, "Logging all");
+			options.addOption("um", "unorderdMaps", false, "Write all maps as unorderd maps");
 			options.addOption("u", "usage", false, "Print usage.");
 
 			CommandLineParser parser = new PosixParser();
