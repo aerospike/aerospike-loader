@@ -63,7 +63,9 @@
 
 ## Aerospike Loader [3.0.0] Release Date [27 Jan 2023]
 ### Breaking Changes:
--   Upgrade Aerospike Java client to 6.1.6 which is only compatible with Aerospike server 4.9 or newer.
--   Write key ordered maps by default.
+- TOOLS-2346 Upgrade Java client to 6.1.6. 
+  - Aerospike Java client to 6.1.6 is only compatible with Aerospike server versions 4.9 or newer.
+- TOOLS-2322 Write key ordered maps by default.
 ### New features:
--   Add -um/--unorderedMaps flags to force writing unordered maps.
+- TOOLS-2347  Add -um, --unorderedMaps flags.
+  - Forces all maps to be written as unorderd maps. This was standard before the 3.0.0 asloader release.
