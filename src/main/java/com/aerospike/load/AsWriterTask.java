@@ -430,9 +430,9 @@ public class AsWriterTask implements Callable<Integer> {
 	private Bin createBinForFloat(String binName, String binRawValue) {
 
 		try {
-			float binfloat = Float.parseFloat(binRawValue);
+			// parse as a double to get greater precision
+			double binfloat = Double.parseDouble(binRawValue);
 
-			// Now server support float
 			return new Bin(binName, binfloat);
 
 		} catch (Exception e) {
