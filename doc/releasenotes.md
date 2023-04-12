@@ -69,3 +69,21 @@
 ### New features:
 - TOOLS-2347  Add -um, --unorderedMaps flags.
   - Forces all maps to be written as unorderd maps. This was standard before the 3.0.0 asloader release.
+
+## Aerospike Loader [4.0.0] Release Date [12 Apr 2023]
+## Breaking Changes:
+* TOOLS-2469 \(ASLOADER\) Float data type loses precision, change to double.
+   * Asloader 4.0.0 will parse data specified as "float" in the JSON spec as Java doubles. This means you may see changes in the precision of floating point values when compared to previous versions of asloader. Parsing as double matches the precision of the [Aerospike double data type](https://docs.aerospike.com/server/guide/data-types/scalar-data-types#double) which is what all floats are stored as in the Aerospike database.
+
+## Security:
+* TOOLS-1669 Handle CVE-2020-9488 in asloader.
+* TOOLS-1670 Handle CVE-2020-15250 in asloader.
+
+## Bug Fixes:
+* TOOLS-2469 \(ASLOADER\) Float data type loses precision, change to double.
+
+## Updates:
+* [Snyk] Upgrade com.aerospike:aerospike-client from 6.1.6 to 6.1.7 by @snyk-bot
+* [DOCS-1320] [Snyk] Upgrade org.apache.logging.log4j:log4j-core from 2.17.1 to 2.19.0 by @snyk-bot
+* [DOCS-1320] [Snyk] Upgrade commons-cli:commons-cli from 1.2 to 1.5.0 by @snyk-bot
+* [TOOLS-1670] [TOOLS-1690] Bump junit from 4.11 to 4.13.1 by @dependabot
