@@ -45,7 +45,12 @@ Following dependencies are downloaded automatically:
 
 <a name="Usage"></a>
 ## Usage
-Use **run_loader** script along with options and data files.  
+
+If you downloaded the jar from [the releases page](https://github.com/aerospike/aerospike-loader/releases). Use
+
+        $ java -cp target/aerospike-load-*-jar-with-dependencies.jar com.aerospike.load.AerospikeLoad <options> <data file name(s)/directory>
+
+If you downloaded the source. Use **run_loader** script along with options and data files.  
     
         $ ./run_loader <options> <data file name(s)/directory>
 
