@@ -48,7 +48,7 @@ Following dependencies are downloaded automatically:
 
 If you downloaded the jar from [the releases page](https://github.com/aerospike/aerospike-loader/releases). Use
 
-        $ java -cp target/aerospike-load-*-jar-with-dependencies.jar com.aerospike.load.AerospikeLoad <options> <data file name(s)/directory>
+        $ java -cp aerospike-load-*-jar-with-dependencies.jar com.aerospike.load.AerospikeLoad <options> <data file name(s)/directory>
 
 If you downloaded the source. Use **run_loader** script along with options and data files.  
     
