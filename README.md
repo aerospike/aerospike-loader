@@ -2,7 +2,7 @@
 > Aerospike Data Loader can help in migrating data from any other database to
 > Aerospike. User can dump data from different databases in .DSV format and use
 > this tool to parse and load them in Aerospike server. User need to provide
-> .DSV data files to load and aerospike schema file in JSON format. It parse
+> .DSV data files to load and aerospike schema file in JSON format. It parses
 > those .DSV files and load data in Aerospike Server according to given schema
 > in schema files.
 
