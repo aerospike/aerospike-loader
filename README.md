@@ -75,7 +75,6 @@ __Options__:
 -tp,--tls-protocols             Allow TLS protocols. Values:  TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
 -tlsCiphers,--tls-cipher-suite  Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
 -tr,--tls-revoke                Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
--te,--tls-encrypt-only          Enable TLS encryption and disable TLS certificate validation
 -uk,--send-user-key             Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
 -um,--unorderedMaps             If this flag is present write all maps as unordered maps.
 -u,--usage                      Print usage.
