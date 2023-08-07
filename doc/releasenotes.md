@@ -88,7 +88,7 @@
 * [DOCS-1320] [Snyk] Upgrade commons-cli:commons-cli from 1.2 to 1.5.0 by @snyk-bot
 * [TOOLS-1670] [TOOLS-1690] Bump junit from 4.11 to 4.13.1 by @dependabot
 
-## Aerospike Loader [4.0.0] Release Date [12 Apr 2023]
+## Aerospike Loader [4.0.1] Release Date [7 Aug 2023]
 ## Security:
 * [Snyk] Security upgrade com.aerospike:aerospike-client from 6.1.7 to 7.0.0 by @arrowplum in https://github.com/aerospike/aerospike-loader/pull/40
   * TOOLS-2640 fix [CVE-2023](https://aerospike.atlassian.net/browse/TOOLS-2640)
