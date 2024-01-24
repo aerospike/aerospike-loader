@@ -273,16 +273,6 @@ public class AerospikeLoad implements Runnable {
 			log.error("Client is not able to connect:" + params.hosts);
 			return null;
 		}
-		try {
-			// Check read-write role is given to user.
-			if (!client.queryUser(null, clientPolicy.user).roles.contains(Role.ReadWrite)) {
-				log.error("User role:" + client.queryUser(null, clientPolicy.user).roles.toString() + " Expected:" + Role.ReadWrite);
-				return null;
-			}
-		}
-		catch (AerospikeException e) {
-			// Ignore if security is not enabled.
-		}
 		return client;
 	}
 
