@@ -56,6 +56,11 @@ If you downloaded the source. Use **run_loader** script along with options and d
 
 "data file name(s)/directory" can either be space delimited files or a directory name containing data files. See "Data Files" section for more details.
 
+For available options and their descriptions run with asloader's --usage option.
+
+        $ java -cp aerospike-load-*-jar-with-dependencies.jar com.aerospike.load.AerospikeLoad --usage
+        $ ./run_loader --usage
+
 For more details, refer to [Options](https://aerospike.com/docs/tools/asloader/options).
 
 ### Some extra info about internal working:
