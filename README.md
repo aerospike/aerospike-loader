@@ -37,10 +37,10 @@
 <a name="Dependencies"></a>
 ## Dependencies
 Following dependencies are downloaded automatically:
-* Aerospike Java client 7.0.0 or greater
-* Apache commons cli 1.2
-* Log4j 2.17.1
-* Junit 4.4
+* Aerospike Java client 7.2.1 or greater
+* Apache commons cli 1.6.0
+* Log4j 2.21.0
+* Junit 4.13.1
 * Json-simple 1.1.1
 
 <a name="Usage"></a>
