@@ -92,3 +92,8 @@
 ## Security:
 * [Snyk] Security upgrade com.aerospike:aerospike-client from 6.1.7 to 7.0.0 by @arrowplum in https://github.com/aerospike/aerospike-loader/pull/40
   * TOOLS-2640 fix [CVE-2023](https://aerospike.atlassian.net/browse/TOOLS-2640)
+
+## Aerospike Loader [4.0.2] Release Date [15 Jan 2024]
+## Bug Fixes:
+* TOOLS-2826 \(ASLOADER\) Fixed an issue where ldap users fail read-write role validation.
+Asloader no longer checks if the Aerospike user has read-write permissions before beginning writes.
