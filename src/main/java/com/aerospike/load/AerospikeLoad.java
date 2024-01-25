@@ -60,30 +60,7 @@ import com.aerospike.client.util.Util;
  * 
  * It will import multiple Data Dump files concurrently
  * 
- * To run: java -jar aerospike-import-<version> <options> <file names>
- * The options are:
- * -h,--hosts <arg>      			List of seed hosts (default: localhost)
- * -p,--port <arg>      			Server port (default: 3000)
- * -U,--user <arg>                  User name
- * -P,--password <arg>              Password
- * -n,--namespace <arg> 			Namespace (default: test)
- * -c,--config <arg>   				Column definition file in JSON format
- * -g,--max-throughput <arg>        Set a target transactions per second for the loader. The loader should not exceed this average throughput.
- * -T,--transaction-timeout <arg>	Transaction timeout in milliseconds for write (default: no timeout)
- * -e,--expiration-time <arg>		Time to expire of a record in seconds(default: never expire)
- * -tz,--timezone <arg>				TimeZone of source where datadump is taken (default: local timeZone)
- * -ec,--abort-Error-Count<arg>		Abort when error occurs more than this value(default: 0(don't abort))
- * -wa,--write-Action <arg>			Write action if key already exists (default: update)
- * -tls,--tls-enable                Use TLS/SSL sockets(default: False)
- * -tp,--tls-protocols              Allow TLS protocols. Values:  TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
- * -tlsCiphers,--tls-cipher-suite   Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
- * -tr,--tls-revoke                 Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
- * -uk,--send-user-key              Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
- * -u,--usage           			Print usage.
- * -v,--verbose						Verbose mode for debug logging (default: INFO)
- * -um,--unordered-map				Write maps as unorderd (default: false)
- * The file names can be a series of file names or directories. 
- *
+ * To run: java -jar aerospike-import-<version> <options> <file names> *
  * @author Aerospike
  *
  */
@@ -272,16 +249,6 @@ public class AerospikeLoad implements Runnable {
 		if (!client.isConnected()) {
 			log.error("Client is not able to connect:" + params.hosts);
 			return null;
-		}
-		try {
-			// Check read-write role is given to user.
-			if (!client.queryUser(null, clientPolicy.user).roles.contains(Role.ReadWrite)) {
-				log.error("User role:" + client.queryUser(null, clientPolicy.user).roles.toString() + " Expected:" + Role.ReadWrite);
-				return null;
-			}
-		}
-		catch (AerospikeException e) {
-			// Ignore if security is not enabled.
 		}
 		return client;
 	}

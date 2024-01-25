@@ -56,33 +56,12 @@ If you downloaded the source. Use **run_loader** script along with options and d
 
 "data file name(s)/directory" can either be space delimited files or a directory name containing data files. See "Data Files" section for more details.
 
-__Options__:
+For available options and their descriptions run with asloader's --usage option.
 
-``` java
--h,--hosts <arg>                List of seed hosts (default: localhost)
--p,--port <arg>                 Server port (default: 3000)
--U,--user <arg>                 User name
--P,--password <arg>             Password
--n,--namespace <arg>            Namespace (default: test)
--c,--config <arg>               Column definition file in JSON format
--g,--max-throughput <arg>       Set a target max transactions per second for the loader (default: 0 (don`t limit TPS)).
--T,--transaction-timeout <arg>  Transaction timeout in milliseconds for write (default: no timeout)
--e,--expiration-time <arg>      Time to expire of a record in seconds (default: never expire)
--tz,--timezone <arg>            TimeZone of source where datadump is taken (default: local timeZone)
--ec,--abort-Error-Count<arg>    Abort when error occurs more than this value (default: 0 (don`t abort))
--wa,--write-Action <arg>        Write action if key already exists (default: update)
--tls,--tls-enable               Use TLS/SSL sockets(default: False)
--tp,--tls-protocols             Allow TLS protocols. Values:  TLSv1,TLSv1.1,TLSv1.2 separated by comma (default: TLSv1.2)
--tlsCiphers,--tls-cipher-suite  Allow TLS cipher suites. Values:  cipher names defined by JVM separated by comma (default: null (default cipher list provided by JVM))
--tr,--tls-revoke                Revoke certificates identified by their serial number. Values:  serial numbers separated by comma (default: null (Do not revoke certificates))
--uk,--send-user-key             Send user defined key in addition to hash digest to store on the server. (default: userKey is not sent to reduce meta-data overhead)
--um,--unorderedMaps             If this flag is present write all maps as unordered maps.
--u,--usage                      Print usage.
--v,--verbose                    Verbose mode for debug logging (default: INFO)
--V,--version                    Print version
-```
+        $ java -cp aerospike-load-*-jar-with-dependencies.jar com.aerospike.load.AerospikeLoad --usage
+        $ ./run_loader --usage
 
-For more details, refer to [Options](doc/options.md).
+For more details, refer to [Options](https://aerospike.com/docs/tools/asloader/options).
 
 ### Some extra info about internal working:
 
@@ -90,7 +69,7 @@ For more details, refer to [Options](doc/options.md).
     * reader threads (reads CSV files) (The number of reader threads = either number of CPUs or number of files in the directory, whichever one is lower.)
     * writer threads (writes to the cluster) (The number of writer threads = number of CPUs * 5 (5 is scaleFactor))
 
-### Sample usage of all options:
+### Sample usage of common options:
 
         $ ./run_loader -h nodex -p 3000 -n test -T 3000 -e 2592000 -ec 100 -tz PST -wa update -c ~/pathto/config.json datafiles/
 
