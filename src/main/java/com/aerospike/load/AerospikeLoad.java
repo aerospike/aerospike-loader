@@ -73,6 +73,7 @@ public class AerospikeLoad implements Runnable {
 	private static ExecutorService	writerPool;
 	private static int				nWriterThreads;
 	private static int				nReaderThreads;
+	private static int 				maxConnsPerNode;
 	
 	private static final int		scaleFactor = 5;
 	private static String 			DEFAULT_DELIMITER = ",";
@@ -196,13 +197,13 @@ public class AerospikeLoad implements Runnable {
 				Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.DEBUG);
 			}
 			
+			initReadWriteThreadCnt(cl);
+
 			// Get and validate user roles for client.
 			client = getAerospikeClient(cl);
 			if (client == null) {
 				return;
 			}
-			
-			initReadWriteThreadCnt(cl);
 						
 			List<String> dataFileNames = new ArrayList<String>();
 			initDataFileNameList(cl, dataFileNames);
@@ -297,6 +298,7 @@ public class AerospikeLoad implements Runnable {
 			}
 		}
 
+		clientPolicy.maxConnsPerNode = maxConnsPerNode;
 	}
 	
 	private static void initReadWriteThreadCnt(CommandLine cl) {
@@ -312,6 +314,10 @@ public class AerospikeLoad implements Runnable {
 		nReaderThreads = (nReaderThreads > 0
 				? (nReaderThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS : nReaderThreads) : 1);
 		log.debug("Using reader Threads: " + nReaderThreads);
+
+		// add 1 for the tend thread
+		maxConnsPerNode = nWriterThreads + nReaderThreads + 1;
+		log.debug("Max connections per node: " + maxConnsPerNode);
 	}
 	
 	private static void initDataFileNameList(CommandLine cl, List<String> dataFileNames) {
