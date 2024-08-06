@@ -315,7 +315,8 @@ public class AerospikeLoad implements Runnable {
 				? (nReaderThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS : nReaderThreads) : 1);
 		log.debug("Using reader Threads: " + nReaderThreads);
 
-		maxConnsPerNode = nWriterThreads + nReaderThreads;
+		// add 1 for the tend thread
+		maxConnsPerNode = nWriterThreads + nReaderThreads + 1;
 		log.debug("Max connections per node: " + maxConnsPerNode);
 	}
 	
