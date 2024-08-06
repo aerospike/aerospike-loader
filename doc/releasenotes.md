@@ -102,3 +102,12 @@
 ## Bug Fixes:
 * TOOLS-2826 \(ASLOADER\) Fixed an issue where ldap users fail read-write role validation.
 Asloader no longer checks if the Aerospike user has read-write permissions before beginning writes.
+
+## Aerospike Loader [4.0.3] Release Date [7 Aug 2024]
+## Security
+* [Snyk] fix: upgrade org.apache.logging.log4j:log4j-core from 2.21.0 to 2.22.1
+* [Snyk] fix: upgrade org.apache.logging.log4j:log4j-api from 2.21.0 to 2.22.1
+* [Snyk] fix: upgrade org.apache.logging.log4j:log4j-api from 2.21.0 to 2.22.1
+
+## Bug Fixes:
+* [TOOLS-2690] \(ASLOADER\) Set client policy maxConnsPerNode to the max amount of worker threads to prevent out of connection errors.

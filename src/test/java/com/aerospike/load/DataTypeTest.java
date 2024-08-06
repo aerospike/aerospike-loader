@@ -50,7 +50,7 @@ enum BinType {
 public class DataTypeTest {
 	
 	String host = "127.0.0.1";
-	String port = "3000";
+	String port = "3100";
 	String ns = "test";
 	String set = null;
 	MapOrder expectedMapOrder = MapOrder.KEY_ORDERED;

@@ -212,7 +212,7 @@ public class AerospikeLoad implements Runnable {
 			}
 
 			// Remove column definition file from list. if directory containing config file is passed.
-			String columnDefinitionFileName = cl.getOptionValue("c", null);
+			String columnDefinitionFileName = cl.getOptionValue("c", "");
 			dataFileNames.remove(columnDefinitionFileName);
 			log.info("Number of data files:" + dataFileNames.size());
 			
