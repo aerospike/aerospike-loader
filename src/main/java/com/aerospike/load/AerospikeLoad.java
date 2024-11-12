@@ -48,7 +48,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.admin.Role;
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.policy.AuthMode;
 import com.aerospike.client.policy.ClientPolicy;
@@ -133,6 +132,8 @@ public class AerospikeLoad implements Runnable {
 			options.addOption("c", "config", true, "Column definition file name");
 			options.addOption("g", "max-throughput", true, "It limit numer of writes/sec in aerospike.");
 			options.addOption("T", "transaction-timeout", true, "write transaction timeout in milliseconds(default: No timeout)");
+			options.addOption("wT", "writer-threads", true, "Number of writer threads (default: available processors * " + scaleFactor + ")");
+			options.addOption("rT", "reader-threads", true, "Number of reader threads (default: available processors)");
 			options.addOption("e", "expirationTime", true,
 					"Set expiration time of each record in seconds." +
 					" -1: Never expire, " +
@@ -196,8 +197,6 @@ public class AerospikeLoad implements Runnable {
 			if (params.verbose) {
 				Configurator.setAllLevels(LogManager.getRootLogger().getName(), Level.DEBUG);
 			}
-			
-			initReadWriteThreadCnt(cl);
 
 			// Get and validate user roles for client.
 			client = getAerospikeClient(cl);
@@ -298,14 +297,34 @@ public class AerospikeLoad implements Runnable {
 			}
 		}
 
+		initReadWriteThreadCnt(cl);
 		clientPolicy.maxConnsPerNode = maxConnsPerNode;
 	}
 	
 	private static void initReadWriteThreadCnt(CommandLine cl) {
 		// Get available processors to calculate default number of threads.
 		int cpus = Runtime.getRuntime().availableProcessors();
-		nWriterThreads = cpus * scaleFactor;
-		nReaderThreads = cpus;
+		if (cl.hasOption("wT")) {
+			try {
+				nWriterThreads = Integer.parseInt(cl.getOptionValue("wT"));
+			} catch (NumberFormatException e) {
+				log.error("Invalid number format for writer threads: " + cl.getOptionValue("wT"));
+				nWriterThreads = cpus * scaleFactor; // default value
+			}
+		} else {
+			nWriterThreads = cpus * scaleFactor;
+		}
+
+		if (cl.hasOption("rT")) {
+			try {
+				nReaderThreads = Integer.parseInt(cl.getOptionValue("rT"));
+			} catch (NumberFormatException e) {
+				log.error("Invalid number format for reader threads: " + cl.getOptionValue("rT"));
+				nReaderThreads = Runtime.getRuntime().availableProcessors(); // default value
+			}
+		} else {
+			nReaderThreads = cpus;
+		}
 
 		nWriterThreads = (nWriterThreads > 0
 				? (nWriterThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS : nWriterThreads) : 1);
@@ -315,11 +334,10 @@ public class AerospikeLoad implements Runnable {
 				? (nReaderThreads > Constants.MAX_THREADS ? Constants.MAX_THREADS : nReaderThreads) : 1);
 		log.debug("Using reader Threads: " + nReaderThreads);
 
-		// add 1 for the tend thread
+		// Add 1 for the tend thread, which is used for cluster tending
 		maxConnsPerNode = nWriterThreads + nReaderThreads + 1;
-		log.debug("Max connections per node: " + maxConnsPerNode);
+		log.info("Max connections per node: " + maxConnsPerNode);
 	}
-	
 	private static void initDataFileNameList(CommandLine cl, List<String> dataFileNames) {
 		// Get data file list.
 		String[] dataFiles = cl.getArgs();
