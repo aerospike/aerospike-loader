@@ -303,8 +303,6 @@ public class AerospikeLoad implements Runnable {
 			clientPolicy.setUseServicesAlternate(true);
 		}
 
-		initReadWriteThreadCnt(cl);
-
 		clientPolicy.maxConnsPerNode = maxConnsPerNode;
 	}
 	
