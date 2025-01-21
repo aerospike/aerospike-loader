@@ -142,6 +142,7 @@ public class AerospikeLoad implements Runnable {
 			options.addOption("tz", "timezone", true, "Timezone of source where data dump is taken (default: local timezone)");
 			options.addOption("ec", "abort-error-count", true, "Error count to abort (default: 0)");
 			options.addOption("wa", "write-action", true, "Write action if key already exists (default: update)");
+			options.addOption("sa", "services_alternate", false, "Enable alternate services.");
 			options.addOption("tls", "tls-enable", false, "Use TLS/SSL sockets");
 			options.addOption("tp", "tls-protocols", true, 
 					"Allow TLS protocols\n" +
@@ -297,6 +298,12 @@ public class AerospikeLoad implements Runnable {
 				clientPolicy.tlsPolicy.revokeCertificates = Util.toBigIntegerArray(s);
 			}
 		}
+
+		if (cl.hasOption("sa")) {
+			clientPolicy.setUseServicesAlternate(true);
+		}
+
+		initReadWriteThreadCnt(cl);
 
 		clientPolicy.maxConnsPerNode = maxConnsPerNode;
 	}
