@@ -21,8 +21,9 @@
 
 <a name="CommunityDevelopment"></a>
 ## Aerospike Loader Community Development
-Aerospike Loader has been turned over to the community. If you wish to contribute code, go ahead and clone this repo, modify the code, and create a pull request.
-Active contributors can then ask to become maintainers for the repo. The wiki can similarly be modified by any code contributor who has been granted pull permissions.
+Aerospike Loader has been turned over to the community. If you wish to contribute code, go ahead and clone this repo, modify the code, and create a pull request. Active contributors can then ask to become maintainers for the repo. The wiki can similarly be modified by any code contributor who has been granted pull permissions.
+
+As described on the [Product Stages](https://aerospike.com/docs/database/reference/product-stages#open-source-products-tools-and-libraries) page, this means that Aerospike will no longer provide support for Aerospike Loader, including vulnerability patching. 
 
 
 <a name="Prerequisites"></a>
